@@ -2,7 +2,7 @@
 
 Université Internationale des Sciences et Technologies — Plateforme complète de gestion académique.
 
-## 🏗 Architecture
+## Architecture
 
 ```
 uist-2its/
@@ -21,7 +21,7 @@ uist-2its/
 └── requirements.txt
 ```
 
-## 🎯 Rôles
+##  Rôles
 
 | Rôle | Accès |
 |------|-------|
@@ -34,7 +34,7 @@ uist-2its/
 | **Étudiant** | Dashboard (moyenne + rang), EDT temps réel, notes validées, profil |
 | **Parent** | Suivi enfants: EDT, notes, assiduité, notifications |
 
-## 🚀 Installation locale
+##  Installation locale
 
 ```bash
 # 1. Cloner et entrer dans le projet
@@ -77,13 +77,13 @@ python manage.py runserver
 3. **Build Command** : `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate`
 4. **Start Command** : `gunicorn core.wsgi:application`
 
-## 📊 Exports
+##  Exports
 
 - **PDF** : Rapports avec en-tête vert UIST (ReportLab)
 - **Excel** : Tableaux formatés avec en-tête vert (openpyxl)
 - Disponibles sur toutes les listes : étudiants, enseignants, parents, notes, EDT, présences, audit
 
-## 📱 API Mobile (JSON)
+##  API Mobile (JSON)
 
 | Endpoint | Description |
 |----------|-------------|
@@ -94,7 +94,7 @@ python manage.py runserver
 | `GET /api/filieres/` | Liste des filières actives |
 | `GET /api/parents/recherche/?q=nom` | Recherche de parents |
 
-## ⚙️ Stack Technique
+## Stack Technique
 
 - **Backend** : Django 5.2
 - **BDD** : PostgreSQL (Neon) / SQLite (dev)
@@ -102,7 +102,3 @@ python manage.py runserver
 - **PDF** : ReportLab
 - **Excel** : openpyxl
 - **Déploiement** : Render + WhiteNoise
-
----
-
-© 2026 UIST — Université Internationale des Sciences et Technologies

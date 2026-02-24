@@ -1,0 +1,946 @@
+Documentation Complète du Système UIST-2ITS
+Table des Matières
+1.	Architecture Globale
+2.	Acteurs et Privilèges
+3.	Fonctionnalités par Acteur
+4.	Relations et Modèle de Données
+5.	Diagrammes UML
+________________________________________
+1. Architecture Globale
+1.1 Principes Architecturaux
+Le système UIST-Planify adopte une architecture en couches basée sur le principe du moindre privilège et de la séparation des responsabilités. L'architecture se compose de 4 couches hiérarchiques :
+1.	┌─────────────────────────────────────────────────────────┐
+2.	│         COUCHE 1 : GOUVERNANCE SYSTÈME                  │
+3.	│              (Super Administrateur)                      │
+4.	└─────────────────────────────────────────────────────────┘
+5.	                          ↓
+6.	┌─────────────────────────────────────────────────────────┐
+7.	│      COUCHE 2 : GOUVERNANCE PÉDAGOGIQUE                 │
+8.	│        (Directeur/Administrateur Principal)             │
+9.	└─────────────────────────────────────────────────────────┘
+10.	                          ↓
+11.	┌─────────────────────────────────────────────────────────┐
+12.	│       COUCHE 3 : ADMINISTRATION OPÉRATIONNELLE          │
+13.	│    ┌──────────────┬──────────────┬──────────────┐      │
+14.	│    │  Gestion 1   │  Gestion 2   │  Gestion 3   │      │
+15.	│    │ (Logistique) │ (Scolarité)  │ (Suivi)      │      │
+16.	│    └──────────────┴──────────────┴──────────────┘      │
+17.	└─────────────────────────────────────────────────────────┘
+18.	                          ↓
+19.	┌─────────────────────────────────────────────────────────┐
+20.	│          COUCHE 4 : UTILISATEURS FINAUX                 │
+21.	│        (Enseignants, Étudiants, Parents)                │
+22.	└─────────────────────────────────────────────────────────┘
+
+1.2 Stack Technique
+●	Backend : Flask (Python) avec architecture Blueprint
+●	Base de données : MySQL 8.0+
+●	Sécurité : Werkzeug pour hashage des mots de passe, sessions Flask
+●	Génération de documents : ReportLab (PDF), OpenPyXL (Excel)
+●	Frontend : Templates Jinja2, Bootstrap 5
+________________________________________
+2. Acteurs et Privilèges
+2.1 Hiérarchie des Rôles
+23.	SUPER_ADMIN (Niveau 5)
+24.	    ↓
+25.	DIRECTEUR (Niveau 4)
+26.	    ↓
+27.	GESTION_1, GESTION_2, GESTION_3 (Niveau 3)
+28.	    ↓
+29.	ENSEIGNANT (Niveau 2)
+30.	    ↓
+31.	ETUDIANT, PARENT (Niveau 1)
+
+2.2 Matrice des Privilèges
+Privilège	Super Admin	Directeur	Gestion 1	Gestion 2	Gestion 3	Enseignant	Étudiant	Parent
+Gérer tous utilisateurs	✅	✅	❌	❌	❌	❌	❌	❌
+Créer comptes Admin	✅	❌	❌	❌	❌	❌	❌	❌
+Valider notes	❌	✅	❌	❌	❌	❌	❌	❌
+Arbitrer conflits	❌	✅	❌	❌	❌	❌	❌	❌
+Gérer EDT	❌	✅	✅	❌	❌	❌	❌	❌
+Gérer salles/filières	❌	✅	✅	❌	❌	❌	❌	❌
+Inscrire étudiants	❌	✅	❌	✅	❌	❌	❌	❌
+Importer notes	❌	✅	❌	✅	❌	❌	❌	❌
+Marquer présences	❌	✅	❌	❌	✅	❌	❌	❌
+Saisir notes	❌	✅	❌	✅	❌	✅	❌	❌
+Consulter ses notes	❌	❌	❌	❌	❌	❌	✅	❌
+Consulter notes enfant	❌	❌	❌	❌	❌	❌	❌	✅
+________________________________________
+3. Fonctionnalités par Acteur
+3.1 SUPER ADMINISTRATEUR (Gouvernance Système)
+Description : Garant de l'intégrité technique, de la sécurité et de la disponibilité du système. Il ne s'implique PAS dans la pédagogie.
+Fonctionnalités
+1.	Gestion des Utilisateurs Globale
+
+○	Route : /super-admin/utilisateurs
+○	Méthodes : GET, POST, PUT, DELETE
+○	Logique :
+■	Créer des comptes pour TOUS les rôles (y compris DIRECTEUR)
+■	Modifier les informations de n'importe quel utilisateur
+■	Désactiver/Réactiver des comptes
+■	Génération automatique de matricules uniques (format : UIST-YYYY-XXXXX)
+○	Contraintes :
+■	Seul rôle pouvant créer des SUPER_ADMIN
+■	Hashage obligatoire des mots de passe (bcrypt)
+■	Validation email unique
+2.	Configuration Système
+
+○	Route : /super-admin/configuration
+○	Méthodes : GET, PUT
+○	Logique :
+■	Définir l'année académique active (ex: 2025-2026)
+■	Configurer les semestres (dates de début/fin)
+■	Paramétrer les seuils d'alerte (ex: taux de présence minimum)
+■	Gérer les paramètres de sécurité (expiration des sessions)
+3.	Rapports d'Audit Système
+
+○	Route : /super-admin/rapports/audit
+○	Méthodes : GET
+○	Logique :
+■	Consulter la table audit_usage pour toutes les actions
+■	Filtrer par utilisateur, date, type d'action
+■	Exporter en JSON, CSV, PDF
+○	Données affichées :
+■	Actions de connexion/déconnexion
+■	Modifications critiques (suppressions, changements de rôles)
+■	Tentatives d'accès non autorisé
+4.	Statistiques Globales
+
+○	Route : /super-admin/dashboard
+○	Méthodes : GET
+○	Logique :
+■	Nombre total d'utilisateurs par rôle
+■	Taux d'activité système (connexions/jour)
+■	Performance de la base de données (temps de réponse moyen)
+■	Alertes système (erreurs 500, accès bloqués)
+Relations
+●	Aucune relation directe avec les entités pédagogiques (Cours, Notes, EDT)
+●	Relation : audit_usage.id_user → utilisateurs.id_user
+________________________________________
+3.2 DIRECTEUR / ADMINISTRATEUR (Gouvernance Pédagogique)
+Description : Autorité pédagogique suprême. Supervise toutes les branches administratives et valide les décisions critiques. Hérite des droits de Gestion 1, 2 et 3.
+Fonctionnalités
+1.	Gestion des Utilisateurs Pédagogiques
+
+○	Route : /directeur/utilisateurs
+○	Méthodes : GET, POST, PUT, DELETE
+○	Logique :
+■	Créer des comptes ENSEIGNANT, ETUDIANT, PARENT, GESTION_X
+■	Ne peut PAS créer de SUPER_ADMIN
+■	Peut modifier/supprimer ces comptes
+○	Contraintes :
+■	Vérification hiérarchique : role_user <= role_directeur
+2.	Validation Souveraine des Notes
+
+○	Route : /directeur/notes/validation
+○	Méthodes : GET, POST
+○	Logique :
+■	Lister toutes les notes en statut 'En attente'
+■	Valider une note : UPDATE notes SET statut_validation='Valide', id_validateur=<directeur_id>
+■	Une fois validée, la note devient immuable (sauf par le Directeur)
+○	Règle métier : Seules les notes validées sont visibles pour les étudiants
+3.	Arbitrage des Conflits EDT
+
+○	Route : /directeur/conflits
+○	Méthodes : GET, POST
+○	Logique :
+■	Consulter les conflits détectés (RG01)
+■	Forcer la création d'un créneau malgré un conflit (avec justification)
+■	Résoudre un conflit en modifiant l'EDT
+○	Audit : Toute action de forçage est tracée dans audit_usage
+4.	Tableau de Bord Stratégique
+
+○	Route : /directeur/dashboard
+○	Méthodes : GET
+○	Logique :
+■	Taux de réussite par filière
+■	Statistiques de présence globale (enseignants et étudiants)
+■	Nombre de notes en attente de validation
+■	Conflits EDT non résolus
+■	Alertes pédagogiques (étudiants en difficulté)
+5.	Génération de Rapports Pédagogiques
+
+○	Route : /directeur/rapports/pedagogiques
+○	Méthodes : GET
+○	Logique :
+■	Rapport de fin de semestre (moyennes par filière)
+■	Classements généraux
+■	Taux d'assiduité par cours
+○	Export : PDF, Excel
+Relations
+●	Toutes les entités (peut consulter et modifier tout élément pédagogique)
+●	Relation spécifique : notes.id_validateur → utilisateurs.id_user
+________________________________________
+3.3 GESTION 1 (Pôle Logistique & Infrastructure)
+Description : Responsable de l'architecture académique : locaux, programmes et planification temporelle.
+Fonctionnalités
+1.	Gestion des Salles
+
+○	Route : /gestion1/salles
+○	Méthodes : GET, POST, PUT, DELETE
+○	Logique :
+■	CRUD complet sur la table salles
+■	Champs : nom_salle, capacite, equipements, batiment
+○	Validation :
+■	Capacité > 0
+■	Nom unique par bâtiment
+2.	Gestion des Filières
+
+○	Route : /gestion1/filieres
+○	Méthodes : GET, POST, PUT, DELETE
+○	Logique :
+■	CRUD sur filieres
+■	Définir le niveau (L1, L2, L3, M1, M2) et l'effectif prévu
+○	Contrainte :
+■	Impossible de supprimer une filière avec des étudiants inscrits (vérifier COUNT(etudiants))
+3.	Gestion des Cours
+
+○	Route : /gestion1/cours
+○	Méthodes : GET, POST, PUT, DELETE
+○	Logique :
+■	CRUD sur cours
+■	Lier un cours à une filière (id_filiere)
+■	Définir le code (unique), libellé, crédits
+○	Validation :
+■	Code cours unique dans le système
+■	Crédits entre 1 et 10
+4.	Planification de l'Emploi du Temps (EDT)
+
+○	Route : /gestion1/edt
+○	Méthodes : GET, POST, PUT, DELETE
+○	Logique :
+■	Créer un créneau : INSERT INTO emploi_du_temps
+32.	Vérification RG01 (Intégrité EDT) avant insertion :
+ SELECT COUNT(*) FROM emploi_du_tempsWHERE jour = <jour> AND semaine_numero = <semaine>AND (  (id_enseignant = <ens> AND <heure_conflit>) OR  (id_salle = <salle> AND <heure_conflit>) OR  (id_cours IN (SELECT id_cours FROM cours WHERE id_filiere = <fil>) AND <heure_conflit>))
+■	
+■	Si COUNT > 0 : Blocage ou alerte Directeur
+○	Fonctionnalité avancée : Consulter les disponibilités enseignants avant de planifier
+5.	Gestion des Disponibilités Enseignants
+
+○	Route : /gestion1/disponibilites
+○	Méthodes : GET
+○	Logique :
+■	Consulter la table disponibilites_enseignants
+■	Affichage visuel : grille hebdomadaire avec zones grises (indisponible)
+○	Aide à la décision : Alerte si tentative de planification sur un créneau indisponible
+6.	Assignation Enseignant-Cours
+
+○	Route : /gestion1/assignation
+○	Méthodes : POST
+○	Logique :
+■	Lier un enseignant à un cours via l'EDT
+■	Vérifier que l'enseignant a la spécialité appropriée
+Relations
+●	Directes : salles, filieres, cours, emploi_du_temps, disponibilites_enseignants
+●	Indirectes : enseignants (lecture seule pour assignation)
+________________________________________
+3.4 GESTION 2 (Pôle Scolarité & Évaluations)
+Description : Gère le cycle de vie de l'étudiant et le processus d'évaluation, de l'inscription à la certification.
+Fonctionnalités
+1.	Gestion des Étudiants
+
+○	Route : /gestion2/etudiants
+○	Méthodes : GET, POST, PUT, DELETE
+○	Logique :
+■	Création de compte utilisateurs avec role='ETUDIANT'
+■	Insertion dans etudiants avec id_user, id_filiere, date_naissance, adresse
+33.	Workflow :
+ # Étape 1 : Créer utilisateuruser_id = Utilisateur.creer(role='ETUDIANT', ...)# Étape 2 : Créer profil étudiantEtudiant.creer(id_user=user_id, id_filiere=..., ...)
+○	
+○	Validation :
+■	Un id_user ne peut apparaître qu'une seule fois dans etudiants
+■	Vérifier que la filière existe
+2.	Gestion des Parents
+
+○	Route : /gestion2/parents
+○	Méthodes : GET, POST, PUT, DELETE
+○	Logique :
+■	Créer compte utilisateurs avec role='PARENT'
+■	Insertion dans parents
+■	Liaison avec étudiants via parente_liaison
+○	Règle métier :
+■	Un parent peut être lié à plusieurs étudiants (fratrie)
+■	Un étudiant peut avoir plusieurs parents (père, mère, tuteur)
+3.	Liaison Parent-Étudiant
+
+○	Route : /gestion2/liaison-parent
+○	Méthodes : POST, DELETE
+34.	Logique :
+ INSERT INTO parente_liaison (id_parent, id_etudiant, lien_parente)VALUES (<parent>, <etudiant>, 'Père'|'Mère'|'Tuteur')
+○	
+○	Validation :
+■	Vérifier que parent et étudiant existent
+■	Empêcher les doublons (même parent-étudiant-lien)
+4.	Planification des Examens
+
+○	Route : /gestion2/examens
+○	Méthodes : GET, POST
+○	Logique :
+■	Créer un créneau EDT spécifique pour un examen
+■	Marquer le type de cours comme "Examen" (peut nécessiter une colonne type_creneau dans emploi_du_temps)
+○	Contraintes :
+■	Vérifier RG01 (pas de conflit de salle/enseignant)
+■	Prévoir une salle avec capacité suffisante pour la filière
+5.	Import Massif de Notes (Excel)
+
+○	Route : /gestion2/import-notes
+○	Méthodes : POST
+○	Logique :
+■	Upload d'un fichier Excel avec colonnes : Matricule, Code_Cours, Note, Type_Evaluation
+35.	Validation de chaque ligne :
+ for row in excel_data:    etudiant = Etudiant.obtenir_par_matricule(row['Matricule'])    cours = Cours.obtenir_par_code(row['Code_Cours'])    if etudiant and cours:        Note.creer(            id_etudiant=etudiant.id,            id_cours=cours.id,            valeur_note=row['Note'],            statut_validation='En attente'        )
+■	
+○	Gestion d'erreurs :
+■	Créer une table import_erreurs pour tracer les lignes rejetées
+■	Afficher un rapport post-import
+6.	Saisie Manuelle de Notes
+
+○	Route : /gestion2/notes/saisie
+○	Méthodes : POST
+36.	Logique :
+ INSERT INTO notes (id_etudiant, id_cours, valeur_note, statut_validation, date_saisie)VALUES (<etud>, <cours>, <note>, 'En attente', NOW())
+○	
+○	Validation :
+■	Note entre 0 et 20
+■	Vérifier que l'étudiant est inscrit dans la filière du cours
+7.	Génération des Bulletins
+
+○	Route : /gestion2/bulletins/generer
+○	Méthodes : POST
+○	Logique :
+37.	Calculer la moyenne générale :
+ SELECT AVG(n.valeur_note * c.credit) / SUM(c.credit) AS moyenneFROM notes nJOIN cours c ON n.id_cours = c.id_coursWHERE n.id_etudiant = <etud> AND n.statut_validation = 'Valide'AND c.id_filiere = (SELECT id_filiere FROM etudiants WHERE id_etudiant = <etud>)
+■	
+38.	Calculer le rang :
+ SELECT COUNT(*) + 1 AS rangFROM (SELECT id_etudiant, AVG(valeur_note) AS moy FROM notes GROUP BY id_etudiant) AS classementWHERE moy > <moyenne_etudiant>
+■	
+■	Générer le PDF (ReportLab)
+■	Sauvegarder dans bulletins avec chemin_pdf
+○	Règle : Seules les notes validées sont incluses
+8.	Édition des Procès-Verbaux (PV)
+
+○	Route : /gestion2/pv/generer
+○	Méthodes : POST
+○	Logique :
+■	Générer un document récapitulatif pour une filière/semestre
+■	Inclure : liste des étudiants, moyennes, décisions (admis/ajourné)
+○	Format : PDF officiel avec en-tête institutionnel
+Relations
+●	Directes : etudiants, parents, parente_liaison, notes, bulletins
+●	Indirectes : cours (pour validation des notes), filieres (pour inscription)
+________________________________________
+3.5 GESTION 3 (Pôle Suivi & Contrôle)
+Description : Vigilance quotidienne sur les présences et détection des anomalies de planification.
+Fonctionnalités
+1.	Marquage des Présences
+
+○	Route : /gestion3/presences/marquer
+○	Méthodes : POST
+39.	Logique :
+ INSERT INTO presences (id_edt, statut, date_pointage, commentaire)VALUES (<creneau>, 'Present'|'Absent'|'Retard', CURDATE(), <comment>)
+○	
+○	Interface : Liste des créneaux du jour avec boutons radio (Présent/Absent/Retard)
+2.	Statistiques de Présence
+
+○	Route : /gestion3/presences/statistiques
+○	Méthodes : GET
+40.	Logique :
+ SELECT   e.nom, e.prenom,  COUNT(p.id_presence) AS total_cours,  SUM(CASE WHEN p.statut = 'Present' THEN 1 ELSE 0 END) AS presents,  (SUM(CASE WHEN p.statut = 'Present' THEN 1 ELSE 0 END) * 100.0 / COUNT(p.id_presence)) AS tauxFROM enseignants ensJOIN utilisateurs e ON ens.id_user = e.id_userLEFT JOIN emploi_du_temps edt ON ens.id_enseignant = edt.id_enseignantLEFT JOIN presences p ON edt.id_edt = p.id_edtGROUP BY ens.id_enseignant
+○	
+○	Affichage : Tableau avec alertes pour taux < 80%
+3.	Monitoring des Conflits EDT
+
+○	Route : /gestion3/conflits/detection
+○	Méthodes : GET
+○	Logique :
+■	Exécuter une requête de détection en temps réel (similaire à RG01)
+■	Lister les créneaux en conflit avec détails (enseignant/salle/filière)
+○	Actions :
+■	Notifier Gestion 1 et Directeur
+■	Proposer des créneaux alternatifs
+4.	Gestion de la Messagerie Interne
+
+○	Route : /gestion3/messages
+○	Méthodes : GET, POST
+○	Logique :
+■	Créer/consulter des messages entre utilisateurs
+■	Notifications pour : notes validées, changements EDT, rappels examens
+○	Table : messages (id_expediteur, id_destinataire, contenu, date)
+5.	Alertes Automatiques
+
+○	Route : /gestion3/alertes
+○	Méthodes : GET
+○	Logique :
+■	Détecter les étudiants avec taux de présence < 75%
+■	Détecter les notes anormales (< 5 ou = 0)
+■	Générer des notifications pour les parents concernés
+Relations
+●	Directes : presences, messages
+●	Indirectes : emploi_du_temps (pour pointage), etudiants (pour alertes)
+________________________________________
+3.6 ENSEIGNANT
+Description : Acteur pédagogique sur le terrain. Saisit les notes et consulte son emploi du temps.
+Fonctionnalités
+1.	Déclaration des Disponibilités
+
+○	Route : /enseignant/disponibilites
+○	Méthodes : GET, POST, DELETE
+41.	Logique :
+ INSERT INTO disponibilites_enseignants (id_enseignant, jour, heure_debut, heure_fin, est_disponible)VALUES (<ens>, 'Lundi', '08:00', '12:00', FALSE)
+○	
+○	Interface : Grille hebdomadaire interactive où l'enseignant clique pour marquer les indisponibilités
+2.	Consultation de l'EDT Personnel
+
+○	Route : /enseignant/edt
+○	Méthodes : GET
+42.	Logique :
+ SELECT edt.*, c.libelle, s.nom_salle, f.nom_filiereFROM emploi_du_temps edtJOIN cours c ON edt.id_cours = c.id_coursJOIN salles s ON edt.id_salle = s.id_salleJOIN filieres f ON c.id_filiere = f.id_filiereWHERE edt.id_enseignant = (SELECT id_enseignant FROM enseignants WHERE id_user = <current_user>)AND edt.semaine_numero = <semaine_actuelle>ORDER BY edt.jour, edt.heure_debut
+○	
+○	Affichage : Calendrier hebdomadaire visuel
+3.	Saisie de Notes
+
+○	Route : /enseignant/notes/saisie
+○	Méthodes : POST
+○	Logique :
+■	Afficher la liste des cours assignés à l'enseignant
+■	Pour chaque cours, afficher les étudiants de la filière
+43.	Saisir les notes :
+ INSERT INTO notes (id_etudiant, id_cours, valeur_note, statut_validation, date_saisie)VALUES (<etud>, <cours_enseignant>, <note>, 'En attente', NOW())
+■	
+○	Contraintes :
+■	L'enseignant ne peut saisir que pour SES cours (vérifier emploi_du_temps.id_enseignant)
+■	Note entre 0 et 20
+4.	Historique des Notes Saisies
+
+○	Route : /enseignant/notes/historique
+○	Méthodes : GET
+44.	Logique :
+ SELECT n.*, e.nom, e.prenom, c.libelleFROM notes nJOIN etudiants et ON n.id_etudiant = et.id_etudiantJOIN utilisateurs e ON et.id_user = e.id_userJOIN cours c ON n.id_cours = c.id_coursJOIN emploi_du_temps edt ON c.id_cours = edt.id_coursWHERE edt.id_enseignant = (SELECT id_enseignant FROM enseignants WHERE id_user = <current_user>)ORDER BY n.date_saisie DESC
+○	
+5.	Tableau de Bord Personnel
+
+○	Route : /enseignant/dashboard
+○	Méthodes : GET
+○	Logique :
+■	Nombre de cours cette semaine
+■	Taux de présence personnel
+■	Nombre de notes saisies (en attente vs validées)
+Relations
+●	Directes : enseignants, disponibilites_enseignants, notes (création)
+●	Indirectes : emploi_du_temps (consultation), etudiants (via cours)
+________________________________________
+3.7 ÉTUDIANT
+Description : Bénéficiaire final du système. Consultation uniquement de ses propres données.
+Fonctionnalités
+1.	Consultation de l'EDT Personnel
+
+○	Route : /etudiant/edt
+○	Méthodes : GET
+45.	Logique :
+ SELECT edt.*, c.libelle, ens_u.nom AS enseignant_nom, s.nom_salleFROM emploi_du_temps edtJOIN cours c ON edt.id_cours = c.id_coursJOIN enseignants ens ON edt.id_enseignant = ens.id_enseignantJOIN utilisateurs ens_u ON ens.id_user = ens_u.id_userJOIN salles s ON edt.id_salle = s.id_salleWHERE c.id_filiere = (SELECT id_filiere FROM etudiants WHERE id_user = <current_user>)AND edt.semaine_numero = <semaine>
+○	
+2.	Consultation des Notes
+
+○	Route : /etudiant/notes
+○	Méthodes : GET
+46.	Logique :
+ SELECT n.valeur_note, n.date_saisie, c.libelle, c.creditFROM notes nJOIN cours c ON n.id_cours = c.id_coursWHERE n.id_etudiant = (SELECT id_etudiant FROM etudiants WHERE id_user = <current_user>)AND n.statut_validation = 'Valide'  -- CRITIQUE : Seules les notes validéesORDER BY n.date_saisie DESC
+○	
+○	Affichage : Tableau avec calcul de moyenne automatique
+3.	Consultation des Bulletins
+
+○	Route : /etudiant/bulletins
+○	Méthodes : GET
+○	
+Logique : sql SELECT b.*, b.chemin_pdf FROM bulletins b WHERE b.id_etudiant = (SELECT id_etudiant FROM etudiants WHERE id_user = <current_user>) ORDER BY b.annee_academique DESC, b.semestre DESC
+●	Action : Télécharger le PDF
+4.	Profil Personnel
+
+○	Route : /etudiant/profil
+○	Méthodes : GET, PUT
+○	Logique :
+■	Consulter : nom, prénom, matricule, filière, date de naissance
+■	Modifier : adresse, email (avec validation)
+5.	Tableau de Bord
+
+○	Route : /etudiant/dashboard
+○	Méthodes : GET
+○	Logique :
+■	Moyenne générale actuelle
+■	Classement dans la filière
+■	Prochain cours (requête sur EDT avec NOW())
+Relations
+●	Directes : etudiants, notes (lecture seule), bulletins (lecture seule)
+●	Indirectes : cours, emploi_du_temps (via filière)
+________________________________________
+3.8 PARENT
+Description : Tuteur légal suivant la progression académique de son/ses enfant(s).
+Fonctionnalités
+1.	Sélection de l'Enfant
+
+○	Route : /parent/enfants
+○	Méthodes : GET
+47.	Logique :
+ SELECT e.id_etudiant, u.nom, u.prenom, f.nom_filiereFROM parente_liaison plJOIN etudiants e ON pl.id_etudiant = e.id_etudiantJOIN utilisateurs u ON e.id_user = u.id_userJOIN filieres f ON e.id_filiere = f.id_filiereWHERE pl.id_parent = (SELECT id_parent FROM parents WHERE id_user = <current_user>)
+○	
+○	Interface : Liste déroulante si plusieurs enfants
+2.	Consultation de l'EDT de l'Enfant
+
+○	Route : /parent/enfant/<id_etudiant>/edt
+○	Méthodes : GET
+48.	Logique : Identique à Étudiant, mais avec vérification :
+ # Vérifier que le parent a le droit de voir cet étudiantif not ParenteLiaison.verifier_lien(parent_id, etudiant_id):    abort(403)
+○	
+3.	Consultation des Notes de l'Enfant
+
+○	Route : /parent/enfant/<id_etudiant>/notes
+○	Méthodes : GET
+49.	Logique :
+ SELECT n.valeur_note, n.date_saisie, c.libelleFROM notes nJOIN cours c ON n.id_cours = c.id_coursWHERE n.id_etudiant = <id_etudiant>AND n.statut_validation = 'Valide'AND EXISTS (  SELECT 1 FROM parente_liaison   WHERE id_parent = (SELECT id_parent FROM parents WHERE id_user = <current_user>)  AND id_etudiant = <id_etudiant>)
+○	
+4.	Consultation de l'Assiduité
+
+○	Route : /parent/enfant/<id_etudiant>/assiduite
+○	Méthodes : GET
+○	Logique :
+■	Calculer le taux de présence de l'enfant (si la fonctionnalité existe pour les étudiants)
+■	Afficher les absences récentes
+5.	Réception de Notifications
+
+○	Route : /parent/notifications
+○	Méthodes : GET
+○	Logique :
+■	Lister les messages système :
+■	"Nouvelle note validée pour [Enfant]"
+■	"Modification de l'EDT de [Enfant]"
+■	"Alerte : Taux de présence faible pour [Enfant]"
+Relations
+●	Directes : parents, parente_liaison
+●	Indirectes : etudiants, notes (via liaison), emploi_du_temps (via étudiant)
+________________________________________
+4. Relations et Modèle de Données
+4.1 Schéma de Base de Données Corrigé
+50.	-- ==========================================================
+51.	-- UIST-PLANIFY : SCHÉMA COMPLET COHÉRENT
+52.	-- ==========================================================
+53.	
+54.	CREATE DATABASE IF NOT EXISTS uist_planify_db 
+55.	CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+56.	
+57.	USE uist_planify_db;
+58.	
+59.	-- ==========================================================
+60.	-- COUCHE GOUVERNANCE
+61.	-- ==========================================================
+62.	
+63.	CREATE TABLE utilisateurs (
+64.	    id_user INT PRIMARY KEY AUTO_INCREMENT,
+65.	    matricule VARCHAR(20) UNIQUE NOT NULL,
+66.	    nom VARCHAR(100) NOT NULL,
+67.	    prenom VARCHAR(100) NOT NULL,
+68.	    email VARCHAR(150) UNIQUE NOT NULL,
+69.	    mot_de_passe VARCHAR(255) NOT NULL, -- Bcrypt hash
+70.	    role ENUM(
+71.	        'SUPER_ADMIN', 
+72.	        'DIRECTEUR', 
+73.	        'GESTION_1', 
+74.	        'GESTION_2', 
+75.	        'GESTION_3', 
+76.	        'ENSEIGNANT', 
+77.	        'ETUDIANT', 
+78.	        'PARENT'
+79.	    ) NOT NULL,
+80.	    est_actif BOOLEAN DEFAULT TRUE,
+81.	    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+82.	    derniere_connexion TIMESTAMP NULL,
+83.	    INDEX idx_role (role),
+84.	    INDEX idx_email (email)
+85.	) ENGINE=InnoDB;
+86.	
+87.	CREATE TABLE audit_usage (
+88.	    id_audit INT PRIMARY KEY AUTO_INCREMENT,
+89.	    id_user INT,
+90.	    action VARCHAR(255) NOT NULL,
+91.	    table_affectee VARCHAR(50),
+92.	    id_enregistrement INT, -- ID de l'élément modifié
+93.	    details TEXT,
+94.	    ip_address VARCHAR(45),
+95.	    date_action TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+96.	    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user) ON DELETE SET NULL,
+97.	    INDEX idx_user_date (id_user, date_action)
+98.	) ENGINE=InnoDB;
+99.	
+100.	-- ==========================================================
+101.	-- POLE GESTION 1 : Infrastructure
+102.	-- ==========================================================
+103.	
+104.	CREATE TABLE salles (
+105.	    id_salle INT PRIMARY KEY AUTO_INCREMENT,
+106.	    nom_salle VARCHAR(50) NOT NULL,
+107.	    capacite INT NOT NULL CHECK (capacite > 0),
+108.	    equipements TEXT,
+109.	    batiment VARCHAR(50),
+110.	    est_active BOOLEAN DEFAULT TRUE,
+111.	    UNIQUE KEY unique_salle_batiment (nom_salle, batiment)
+112.	) ENGINE=InnoDB;
+113.	
+114.	CREATE TABLE filieres (
+115.	    id_filiere INT PRIMARY KEY AUTO_INCREMENT,
+116.	    code_filiere VARCHAR(20) UNIQUE NOT NULL,
+117.	    nom_filiere VARCHAR(100) NOT NULL,
+118.	    niveau VARCHAR(20) NOT NULL, -- L1, L2, L3, M1, M2
+119.	    effectif_prevu INT DEFAULT 0,
+120.	    INDEX idx_niveau (niveau)
+121.	) ENGINE=InnoDB;
+122.	
+123.	CREATE TABLE enseignants (
+124.	    id_enseignant INT PRIMARY KEY AUTO_INCREMENT,
+125.	    id_user INT UNIQUE NOT NULL,
+126.	    specialite VARCHAR(150),
+127.	    telephone VARCHAR(20),
+128.	    total_heures_prevues DECIMAL(6,2) DEFAULT 0,
+129.	    total_heures_effectuees DECIMAL(6,2) DEFAULT 0,
+130.	    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user) ON DELETE CASCADE
+131.	) ENGINE=InnoDB;
+132.	
+133.	CREATE TABLE cours (
+134.	    id_cours INT PRIMARY KEY AUTO_INCREMENT,
+135.	    code_cours VARCHAR(20) UNIQUE NOT NULL,
+136.	    libelle VARCHAR(150) NOT NULL,
+137.	    credit INT DEFAULT 1 CHECK (credit BETWEEN 1 AND 10),
+138.	    id_filiere INT NOT NULL,
+139.	    coefficient DECIMAL(3,2) DEFAULT 1.00,
+140.	    FOREIGN KEY (id_filiere) REFERENCES filieres(id_filiere) ON DELETE CASCADE,
+141.	    INDEX idx_filiere (id_filiere)
+142.	) ENGINE=InnoDB;
+143.	
+144.	CREATE TABLE disponibilites_enseignants (
+145.	    id_dispo INT PRIMARY KEY AUTO_INCREMENT,
+146.	    id_enseignant INT NOT NULL,
+147.	    jour ENUM('Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi') NOT NULL,
+148.	    heure_debut TIME NOT NULL,
+149.	    heure_fin TIME NOT NULL,
+150.	    est_disponible BOOLEAN DEFAULT TRUE,
+151.	    type_contrainte ENUM('Fixe', 'Prefere', 'Exceptionnel') DEFAULT 'Fixe',
+152.	    motif TEXT,
+153.	    FOREIGN KEY (id_enseignant) REFERENCES enseignants(id_enseignant) ON DELETE CASCADE,
+154.	    INDEX idx_enseignant_jour (id_enseignant, jour)
+155.	) ENGINE=InnoDB;
+156.	
+157.	-- ==========================================================
+158.	-- POLE GESTION 3 : Planification & Suivi
+159.	-- ==========================================================
+160.	
+161.	CREATE TABLE emploi_du_temps (
+162.	    id_edt INT PRIMARY KEY AUTO_INCREMENT,
+163.	    id_cours INT NOT NULL,
+164.	    id_enseignant INT NOT NULL,
+165.	    id_salle INT NOT NULL,
+166.	    jour ENUM('Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi') NOT NULL,
+167.	    heure_debut TIME NOT NULL,
+168.	    heure_fin TIME NOT NULL,
+169.	    semaine_numero INT NOT NULL CHECK (semaine_numero BETWEEN 1 AND 52),
+170.	    annee_academique VARCHAR(9) NOT NULL, -- Ex: 2025-2026
+171.	    type_creneau ENUM('Cours', 'TD', 'TP', 'Examen') DEFAULT 'Cours',
+172.	    FOREIGN KEY (id_cours) REFERENCES cours(id_cours) ON DELETE CASCADE,
+173.	    FOREIGN KEY (id_enseignant) REFERENCES enseignants(id_enseignant) ON DELETE RESTRICT,
+174.	    FOREIGN KEY (id_salle) REFERENCES salles(id_salle) ON DELETE RESTRICT,
+175.	    INDEX idx_semaine_jour (semaine_numero, jour),
+176.	    INDEX idx_enseignant (id_enseignant),
+177.	    INDEX idx_salle (id_salle)
+178.	) ENGINE=InnoDB;
+179.	
+180.	CREATE TABLE presences (
+181.	    id_presence INT PRIMARY KEY AUTO_INCREMENT,
+182.	    id_edt INT NOT NULL,
+183.	    statut ENUM('Present', 'Absent', 'Retard') DEFAULT 'Present',
+184.	    date_pointage DATE NOT NULL,
+185.	    heure_pointage TIME,
+186.	    commentaire VARCHAR(255),
+187.	    marque_par INT, -- Gestionnaire qui a marqué
+188.	    FOREIGN KEY (id_edt) REFERENCES emploi_du_temps(id_edt) ON DELETE CASCADE,
+189.	    FOREIGN KEY (marque_par) REFERENCES utilisateurs(id_user) ON DELETE SET NULL,
+190.	    UNIQUE KEY unique_pointage (id_edt, date_pointage),
+191.	    INDEX idx_date (date_pointage)
+192.	) ENGINE=InnoDB;
+193.	
+194.	-- ==========================================================
+195.	-- POLE GESTION 2 : Scolarité
+196.	-- ==========================================================
+197.	
+198.	CREATE TABLE etudiants (
+199.	    id_etudiant INT PRIMARY KEY AUTO_INCREMENT,
+200.	    id_user INT UNIQUE NOT NULL,
+201.	    id_filiere INT NOT NULL,
+202.	    date_naissance DATE,
+203.	    lieu_naissance VARCHAR(100),
+204.	    adresse TEXT,
+205.	    telephone VARCHAR(20),
+206.	    date_inscription DATE DEFAULT (CURRENT_DATE),
+207.	    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user) ON DELETE CASCADE,
+208.	    FOREIGN KEY (id_filiere) REFERENCES filieres(id_filiere) ON DELETE RESTRICT,
+209.	    INDEX idx_filiere (id_filiere)
+210.	) ENGINE=InnoDB;
+211.	
+212.	CREATE TABLE parents (
+213.	    id_parent INT PRIMARY KEY AUTO_INCREMENT,
+214.	    id_user INT UNIQUE NOT NULL,
+215.	    profession VARCHAR(100),
+216.	    telephone VARCHAR(20),
+217.	    adresse TEXT,
+218.	    FOREIGN KEY (id_user) REFERENCES utilisateurs(id_user) ON DELETE CASCADE
+219.	) ENGINE=InnoDB;
+220.	
+221.	CREATE TABLE parente_liaison (
+222.	    id_liaison INT PRIMARY KEY AUTO_INCREMENT,
+223.	    id_parent INT NOT NULL,
+224.	    id_etudiant INT NOT NULL,
+225.	    lien_parente ENUM('Père', 'Mère', 'Tuteur', 'Autre') NOT NULL,
+226.	    est_contact_principal BOOLEAN DEFAULT FALSE,
+227.	    FOREIGN KEY (id_parent) REFERENCES parents(id_parent) ON DELETE CASCADE,
+228.	    FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE,
+229.	    UNIQUE KEY unique_parent_etudiant (id_parent, id_etudiant)
+230.	) ENGINE=InnoDB;
+231.	
+232.	CREATE TABLE notes (
+233.	    id_note INT PRIMARY KEY AUTO_INCREMENT,
+234.	    id_etudiant INT NOT NULL,
+235.	    id_cours INT NOT NULL,
+236.	    valeur_note DECIMAL(4,2) NOT NULL CHECK (valeur_note BETWEEN 0 AND 20),
+237.	    type_evaluation ENUM('Devoir', 'Controle', 'Examen', 'TP', 'Projet') NOT NULL,
+238.	    coefficient DECIMAL(3,2) DEFAULT 1.00,
+239.	    statut_validation ENUM('En attente', 'Valide') DEFAULT 'En attente',
+240.	    id_validateur INT, -- Le Directeur
+241.	    date_saisie TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+242.	    date_validation TIMESTAMP NULL,
+243.	    commentaire TEXT,
+244.	    FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE,
+245.	    FOREIGN KEY (id_cours) REFERENCES cours(id_cours) ON DELETE RESTRICT,
+246.	    FOREIGN KEY (id_validateur) REFERENCES utilisateurs(id_user) ON DELETE SET NULL,
+247.	    INDEX idx_etudiant_cours (id_etudiant, id_cours),
+248.	    INDEX idx_statut (statut_validation)
+249.	) ENGINE=InnoDB;
+250.	
+251.	CREATE TABLE bulletins (
+252.	    id_bulletin INT PRIMARY KEY AUTO_INCREMENT,
+253.	    id_etudiant INT NOT NULL,
+254.	    moyenne_generale DECIMAL(4,2),
+255.	    rang INT,
+256.	    semestre INT CHECK (semestre IN (1, 2)),
+257.	    annee_academique VARCHAR(9) NOT NULL,
+258.	    chemin_pdf VARCHAR(255),
+259.	    date_generation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+260.	    genere_par INT,
+261.	    FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE,
+262.	    FOREIGN KEY (genere_par) REFERENCES utilisateurs(id_user) ON DELETE SET NULL,
+263.	    UNIQUE KEY unique_bulletin (id_etudiant, semestre, annee_academique),
+264.	    INDEX idx_annee (annee_academique)
+265.	) ENGINE=InnoDB;
+266.	
+267.	-- ==========================================================
+268.	-- MESSAGERIE & NOTIFICATIONS
+269.	-- ==========================================================
+270.	
+271.	CREATE TABLE messages (
+272.	    id_message INT PRIMARY KEY AUTO_INCREMENT,
+273.	    id_expediteur INT NOT NULL,
+274.	    id_destinataire INT NOT NULL,
+275.	    objet VARCHAR(200),
+276.	    contenu TEXT NOT NULL,
+277.	    est_lu BOOLEAN DEFAULT FALSE,
+278.	    date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+279.	    date_lecture TIMESTAMP NULL,
+280.	    FOREIGN KEY (id_expediteur) REFERENCES utilisateurs(id_user) ON DELETE CASCADE,
+281.	    FOREIGN KEY (id_destinataire) REFERENCES utilisateurs(id_user) ON DELETE CASCADE,
+282.	    INDEX idx_destinataire (id_destinataire, est_lu)
+283.	) ENGINE=InnoDB;
+284.	
+285.	-- ==========================================================
+286.	-- CONFIGURATION SYSTÈME
+287.	-- ==========================================================
+288.	
+289.	CREATE TABLE configuration_systeme (
+290.	    id_config INT PRIMARY KEY AUTO_INCREMENT,
+291.	    cle VARCHAR(100) UNIQUE NOT NULL,
+292.	    valeur TEXT,
+293.	    description VARCHAR(255),
+294.	    modifie_par INT,
+295.	    date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+296.	    FOREIGN KEY (modifie_par) REFERENCES utilisateurs(id_user) ON DELETE SET NULL
+297.	) ENGINE=InnoDB;
+298.	
+299.	-- Initialisation des configurations par défaut
+300.	INSERT INTO configuration_systeme (cle, valeur, description) VALUES
+301.	('annee_academique_actuelle', '2025-2026', 'Année académique en cours'),
+302.	('semestre_actuel', '1', 'Semestre actuel (1 ou 2)'),
+303.	('taux_presence_minimum', '75', 'Taux de présence minimum requis (%)'),
+304.	('duree_session_minutes', '120', 'Durée de validité des sessions en minutes');
+
+4.2 Diagramme Entité-Association (Textuel)
+305.	UTILISATEURS (1) ──┬── (1) ENSEIGNANTS
+306.	                   ├── (1) ETUDIANTS ──── (N) NOTES
+307.	                   ├── (1) PARENTS       ├── (N) BULLETINS
+308.	                   └── (N) AUDIT_USAGE   └── (1) FILIERES ──── (N) COURS
+309.	                                                                    │
+310.	SALLES (N) ────┐                                                   │
+311.	               │                                                    │
+312.	ENSEIGNANTS────┤── (N) EMPLOI_DU_TEMPS ──────────────────────────┘
+313.	               │           │
+314.	COURS ─────────┘           └── (N) PRESENCES
+315.	               
+316.	PARENTS ────┬── (N) PARENTE_LIAISON ──┬── (N) ETUDIANTS
+317.	            │                          │
+318.	            └── (N) MESSAGES ──────────┴── (N) UTILISATEURS
+319.	
+320.	ENSEIGNANTS ──── (N) DISPONIBILITES_ENSEIGNANTS
+
+4.3 Règles d'Intégrité Référentielle
+1.	RG01 - Intégrité EDT : Un créneau ne peut être créé si :
+
+○	L'enseignant est déjà occupé (même jour, même heure)
+○	La salle est déjà réservée
+○	La filière (via le cours) a déjà un cours programmé
+2.	RG02 - Aide à la Décision : Alerte si création EDT sur créneau marqué comme indisponible par l'enseignant
+
+3.	RG03 - Validation des Notes : Une note en statut "En attente" ne peut être consultée que par :
+
+○	L'enseignant qui l'a saisie
+○	Gestion 2
+○	Le Directeur
+4.	RG04 - Hiérarchie des Rôles : Un utilisateur ne peut créer/modifier un compte avec un rôle supérieur au sien
+
+5.	RG05 - Unicité des Profils : Un id_user ne peut apparaître qu'une seule fois dans chaque table de profil (enseignants, etudiants, parents)
+
+6.	RG06 - Protection des Bulletins : Un bulletin ne peut être généré que si toutes les notes du semestre sont validées
+
+________________________________________
+5. Diagrammes UML
+Je vais créer les diagrammes UML suivants :
+1.	Diagramme de cas d'utilisation global
+2.	Diagrammes de cas d'utilisation par acteur
+3.	Diagramme de classes
+4.	Diagrammes de séquence pour les processus critiquesParfait ! J'ai créé une documentation complète et cohérente du système UIST-Planify. Voici un résumé de ce qui a été fourni :
+Contenu de la Documentation
+1. Architecture Globale
+●	Structure en 4 couches hiérarchiques (Gouvernance Système → Gouvernance Pédagogique → Administration Opérationnelle → Utilisateurs Finaux)
+●	Principes du moindre privilège et séparation des responsabilités
+●	Stack technique détaillé
+2. 8 Acteurs Détaillés avec pour chacun :
+●	✅ Description du rôle
+●	✅ Fonctionnalités complètes avec routes HTTP
+●	✅ Logique métier détaillée (requêtes SQL, workflows)
+●	✅ Contraintes et validations
+●	✅ Relations avec les autres entités
+Acteurs couverts :
+1.	Super Administrateur - Gestion technique du système
+2.	Directeur - Autorité pédagogique et validation finale
+3.	Gestion 1 - Infrastructure et planification EDT
+4.	Gestion 2 - Scolarité et évaluations
+5.	Gestion 3 - Suivi et contrôle des présences
+6.	Enseignant - Saisie de notes et disponibilités
+7.	Étudiant - Consultation de ses données
+8.	Parent - Suivi de l'enfant
+3. Modèle de Données Corrigé
+●	Schéma SQL complet avec contraintes d'intégrité
+●	Relations clarifiées (1:1, 1:N, N:N)
+●	6 règles d'intégrité (RG01 à RG06)
+●	Index et optimisations
+4. 9 Diagrammes UML
+Diagrammes de Cas d'Utilisation :
+1.	Global - Vue d'ensemble du système
+2.	Super Administrateur - 15 cas d'utilisation
+3.	Directeur - 18 cas d'utilisation
+4.	Gestion 1 - 21 cas d'utilisation (logistique)
+5.	Gestion 2 - 22 cas d'utilisation (scolarité)
+6.	Gestion 3 - 21 cas d'utilisation (suivi)
+7.	Enseignant - 19 cas d'utilisation
+8.	Étudiant - 19 cas d'utilisation
+9.	Parent - 20 cas d'utilisation
+Diagramme de Classes :
+●	14 classes interconnectées
+●	Méthodes clés pour chaque entité
+●	Cardinalités précises
+Diagrammes de Séquence :
+1.	Validation des Notes - Processus complet (Enseignant → Directeur → Étudiant)
+2.	Création EDT avec Vérification Conflits - Workflow RG01 + RG02
+3.	Génération de Bulletin - Calcul moyennes, rangs et PDF
+🔑 Corrections Majeures des Incohérences
+1. Hiérarchie des Rôles Clarifiée
+321.	SUPER_ADMIN (niveau 5) - Crée tous les comptes
+322.	    ↓
+323.	DIRECTEUR (niveau 4) - Valide les notes, arbitre
+324.	    ↓
+325.	GESTION_1/2/3 (niveau 3) - Spécialisations
+326.	    ↓
+327.	ENSEIGNANT (niveau 2) - Saisie
+328.	    ↓
+329.	ETUDIANT/PARENT (niveau 1) - Consultation
+
+2. Circuit des Notes Sécurisé
+1.	Enseignant saisit → Statut "En attente"
+2.	Directeur valide → Statut "Valide" + id_validateur
+3.	Étudiant consulte → Uniquement les notes validées
+3. Vérification EDT (RG01 + RG02)
+●	RG01 : Blocage si conflit Enseignant/Salle/Filière
+●	RG02 : Alerte si créneau sur disponibilité enseignant
+4. Relations Parent-Étudiant N:N
+●	Table parente_liaison pour gérer les fratries
+●	Un parent peut suivre plusieurs enfants
+●	Un étudiant peut avoir plusieurs parents (père, mère, tuteur)
+5. Traçabilité Complète
+●	Table audit_usage pour toutes les actions critiques
+●	Sauvegarde de id_user, action, table_affectee, details, ip_address
+Cette documentation peut maintenant servir de référence complète pour l'implémentation ou la refonte du système UIST-2ITS
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+4. Charte Graphique : UIST-Planify
+La charte graphique vise à instaurer la confiance, la clarté et le professionnalisme.
+4.1 Palette de Couleurs
+●	Bleu Institutionnel (#1A365D) : Couleur primaire. Utilisée pour la barre de navigation et les titres majeurs. Symbolise le sérieux et l'autorité.
+●	Or Académique (#D4AF37) : Couleur secondaire. Utilisée pour les boutons d'action importants (Validation, Export) et les distinctions (Rang 1).
+●	Gris Ardoise (#4A5568) : Texte secondaire et icônes.
+●	Blanc Pur (#FFFFFF) : Fond des cartes et de la zone de travail pour maximiser la lisibilité.
+●	Couleurs d'État :
+○	Succès : #2F855A (Note validée, Présent)
+○	Alerte : #C53030 (Conflit EDT, Absent)
+○	Info : #2B6CB0 (Note en attente)
+4.2 Typographie
+●	Titres : Montserrat (Gras) - Moderne et géométrique.
+●	Corps de texte : Open Sans - Excellente lisibilité sur écran pour les tableaux de notes.
+4.3 Éléments d'Interface (UI)
+●	Tableaux : Style "Zebra" (lignes alternées) avec surbrillance au survol.
+●	Badges : Arrondis pour les statuts (ex: [ Validé ], [ En attente ]).
+●	Dashboard : Utilisation de cartes (Cards) blanches avec une légère ombre portée (box-shadow) pour séparer les indicateurs clés.
+________________________________________
+5. Logique de Calcul des Bulletins (Corrigée)
+Pour éviter les incohérences de la classe Bulletin, le calcul est centralisé via cette formule mathématique pour chaque étudiant par semestre :
+$$Moyenne = \frac{\sum_{i=1}^{n} (Note_i \times Credit_i)}{\sum_{i=1}^{n} Credit_i}$$
+Note importante : Le système ne prend en compte que les notes dont le statut_validation = 'Valide'. Si une note est manquante, le système génère une alerte pour l'acteur Gestion 2.
+
