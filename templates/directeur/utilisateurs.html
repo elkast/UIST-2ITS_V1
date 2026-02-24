@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Utilisateurs — Directeur{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:validation_notes' %}"><i class="bi bi-check2-square"></i> Notes</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:edt' %}"><i class="bi bi-calendar3"></i> EDT</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:disponibilites' %}"><i class="bi bi-clock"></i> Disponibilités</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:rapports' %}"><i class="bi bi-bar-chart"></i> Rapports</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'directeur:utilisateurs' %}"><i class="bi bi-people"></i> Utilisateurs</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-people text-vert"></i> Utilisateurs du système</h4>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Matricule</th><th>Nom</th><th>Prénom</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for u in utilisateurs %}
+                <tr>
+                    <td><code>{{ u.matricule }}</code></td>
+                    <td>{{ u.nom }}</td>
+                    <td>{{ u.prenom }}</td>
+                    <td><span class="badge badge-vert">{{ u.get_role_display }}</span></td>
+                    <td>{% if u.est_actif %}<span class="badge badge-vert">Actif</span>{% else %}<span class="badge badge-danger">Inactif</span>{% endif %}</td>
+                    <td>
+                        <a href="{% url 'directeur:reinitialiser_mdp' u.pk %}" class="btn btn-sm btn-outline-warning" onclick="return confirm('Réinitialiser ?')"><i class="bi bi-key"></i> Réinitialiser MDP</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-3">Aucun utilisateur</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

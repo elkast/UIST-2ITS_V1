@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Gestion 2 — Scolarité{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion2:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:etudiants' %}"><i class="bi bi-mortarboard"></i> Étudiants</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:parents' %}"><i class="bi bi-people"></i> Parents</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:saisie_notes' %}"><i class="bi bi-pencil-square"></i> Notes</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:import_notes' %}"><i class="bi bi-upload"></i> Import</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:liaisons' %}"><i class="bi bi-link-45deg"></i> Liaisons</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-4"><i class="bi bi-mortarboard text-vert"></i> Gestion 2 — Scolarité & Évaluations</h4>
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="card stat-card"><span class="stat-value">{{ total_etudiants }}</span><span class="stat-label">Étudiants</span></div></div>
+    <div class="col-md-4"><div class="card stat-card stat-info"><span class="stat-value">{{ total_parents }}</span><span class="stat-label">Parents</span></div></div>
+    <div class="col-md-4"><div class="card stat-card stat-warning"><span class="stat-value">{{ notes_en_attente }}</span><span class="stat-label">Notes en attente</span></div></div>
+</div>
+<div class="card">
+    <div class="card-header-vert"><i class="bi bi-lightning"></i> Actions rapides</div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'gestion2:nouvel_etudiant' %}" class="btn btn-vert"><i class="bi bi-person-plus"></i> Nouvel étudiant</a>
+            <a href="{% url 'gestion2:nouveau_parent' %}" class="btn btn-outline-vert"><i class="bi bi-person-plus"></i> Nouveau parent</a>
+            <a href="{% url 'gestion2:saisie_notes' %}" class="btn btn-outline-vert"><i class="bi bi-pencil-square"></i> Saisir des notes</a>
+            <a href="{% url 'gestion2:import_notes' %}" class="btn btn-outline-vert"><i class="bi bi-upload"></i> Importer (Excel)</a>
+            <a href="{% url 'gestion2:liaison_parent' %}" class="btn btn-outline-vert"><i class="bi bi-link"></i> Liaison parent-étudiant</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

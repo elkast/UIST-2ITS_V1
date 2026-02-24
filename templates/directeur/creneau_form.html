@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{% if creneau %}Modifier créneau{% else %}Nouveau créneau{% endif %}{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:validation_notes' %}"><i class="bi bi-check2-square"></i> Notes</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'directeur:edt' %}"><i class="bi bi-calendar3"></i> EDT</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:disponibilites' %}"><i class="bi bi-clock"></i> Disponibilités</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:rapports' %}"><i class="bi bi-bar-chart"></i> Rapports</a></li>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-calendar-plus"></i> {% if creneau %}Modifier créneau{% else %}Nouveau créneau{% endif %}</div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Cours *</label>
+                        <select name="cours_id" class="form-select" required>
+                            <option value="">Sélectionnez</option>
+                            {% for c in cours %}
+                            <option value="{{ c.pk }}" {% if creneau and creneau.cours_id == c.pk %}selected{% endif %}>{{ c.code_cours }} — {{ c.libelle }} ({{ c.filiere }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Enseignant *</label>
+                        <select name="enseignant_id" class="form-select" required>
+                            <option value="">Sélectionnez</option>
+                            {% for e in enseignants %}
+                            <option value="{{ e.pk }}" {% if creneau and creneau.enseignant_id == e.pk %}selected{% endif %}>{{ e }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Salle *</label>
+                        <select name="salle_id" class="form-select" required>
+                            <option value="">Sélectionnez</option>
+                            {% for s in salles %}
+                            <option value="{{ s.pk }}" {% if creneau and creneau.salle_id == s.pk %}selected{% endif %}>{{ s.nom_salle }} ({{ s.capacite }} pl.)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Jour *</label>
+                            <select name="jour" class="form-select" required>
+                                {% for j in jours %}
+                                <option value="{{ j }}" {% if creneau and creneau.jour == j %}selected{% endif %}>{{ j }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Début *</label>
+                            <input type="time" name="heure_debut" class="form-control" value="{% if creneau %}{{ creneau.heure_debut|time:'H:i' }}{% endif %}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fin *</label>
+                            <input type="time" name="heure_fin" class="form-control" value="{% if creneau %}{{ creneau.heure_fin|time:'H:i' }}{% endif %}" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Type</label>
+                        <select name="type_creneau" class="form-select">
+                            {% for t in types %}
+                            <option value="{{ t }}" {% if creneau and creneau.type_creneau == t %}selected{% endif %}>{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-vert"><i class="bi bi-check-lg"></i> {% if creneau %}Modifier{% else %}Créer{% endif %}</button>
+                        <a href="{% url 'directeur:edt' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

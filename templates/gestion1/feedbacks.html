@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Feedbacks — Gestion 1{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:salles' %}"><i class="bi bi-door-open"></i> Salles</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:filieres' %}"><i class="bi bi-collection"></i> Filières</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:cours' %}"><i class="bi bi-book"></i> Cours</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:assignation' %}"><i class="bi bi-person-plus"></i> Assignation</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion1:feedbacks' %}"><i class="bi bi-star"></i> Feedbacks</a></li>
+{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="bi bi-star"></i> Gestion des Feedbacks</h2>
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-vert">{{ total }}</h3>
+                <p class="mb-0">Total反馈</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ moyenne }} / 5</h3>
+                <p class="mb-0">Note moyenne</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-info">{{ feedbacks.count }}</h3>
+                <p class="mb-0">反馈总数</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="btn-group" role="group">
+            <a href="{% url 'gestion1:feedbacks' %}" class="btn btn-outline-secondary {% if not est_traite %}active{% endif %}">Tous</a>
+            <a href="{% url 'gestion1:feedbacks' %}?est_traite=non" class="btn btn-outline-warning {% if est_traite == 'non' %}active{% endif %}">Non traités</a>
+            <a href="{% url 'gestion1:feedbacks' %}?est_traite=oui" class="btn btn-outline-success {% if est_traite == 'oui' %}active{% endif %}">Traités</a>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des feedbacks -->
+<div class="card">
+    <div class="card-body">
+        {% if feedbacks %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Note</th>
+                        <th>Commentaire</th>
+                        <th>Email</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in feedbacks %}
+                    <tr>
+                        <td>{{ f.date_creation|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <span class="badge" style="background-color: {% if f.note >= 4 %}#28a745{% elif f.note >= 3 %}#ffc107{% else %}#dc3545{% endif %};">
+                                {{ f.note_stars }}
+                            </span>
+                        </td>
+                        <td>{{ f.commentaire|default:"-" }}</td>
+                        <td>{{ f.email|default:"-" }}</td>
+                        <td>
+                            {% if f.est_traite %}
+                            <span class="badge bg-success">Traité</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">En attente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'gestion1:traiter_feedback' f.id %}" class="btn btn-sm {% if f.est_traite %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                                <i class="bi bi-check-circle"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+            <p class="mt-3 text-muted">Aucun feedback pour le moment.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

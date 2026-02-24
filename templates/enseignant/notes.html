@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Notes{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'enseignant:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'enseignant:edt' %}"><i class="bi bi-calendar3"></i> Mon EDT</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'enseignant:disponibilites' %}"><i class="bi bi-clock"></i> Disponibilités</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'enseignant:notes' %}"><i class="bi bi-journal-check"></i> Notes</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-journal-check text-vert"></i> Notes de mes cours</h4>
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="GET" class="d-flex gap-2 align-items-center">
+            <label class="form-label mb-0 fw-bold small">Filière :</label>
+            <select name="filiere_id" class="form-select form-select-sm" style="max-width:280px;" onchange="this.form.submit()">
+                <option value="">Toutes</option>
+                {% for f in filieres %}<option value="{{ f.pk }}" {% if filiere_id == f.pk|stringformat:"d" %}selected{% endif %}>{{ f.nom_filiere }} ({{ f.niveau }})</option>{% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Étudiant</th><th>Matricule</th><th>Cours</th><th>Note</th><th>Type</th><th>Statut</th><th>Date</th></tr></thead>
+            <tbody>
+                {% for n in notes %}
+                <tr>
+                    <td>{{ n.id_etudiant.id_user.nom }} {{ n.id_etudiant.id_user.prenom }}</td>
+                    <td><code>{{ n.id_etudiant.id_user.matricule }}</code></td>
+                    <td>{{ n.id_cours.libelle }}</td>
+                    <td><strong>{{ n.valeur_note }}/20</strong></td>
+                    <td><span class="badge badge-info">{{ n.type_evaluation }}</span></td>
+                    <td>
+                        {% if n.statut_validation == "Valide" %}<span class="badge badge-vert">Validé</span>
+                        {% elif n.statut_validation == "Rejete" %}<span class="badge badge-danger">Rejeté</span>
+                        {% else %}<span class="badge badge-warning">En attente</span>{% endif %}
+                    </td>
+                    <td class="small">{{ n.date_saisie|date:"d/m/Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-3">Aucune note</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Nouvel utilisateur — Super Admin{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'super_admin:utilisateurs' %}"><i class="bi bi-people"></i> Utilisateurs</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:audit' %}"><i class="bi bi-journal-text"></i> Audit</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:rapports' %}"><i class="bi bi-file-earmark-bar-graph"></i> Rapports</a></li>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-person-plus"></i> Nouvel utilisateur</div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Rôle *</label>
+                        <select name="role" class="form-select" required id="role-select">
+                            {% for code, label in roles %}
+                            <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6"><label class="form-label">Nom *</label><input type="text" name="nom" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label">Prénom *</label><input type="text" name="prenom" class="form-control" required></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email <small class="text-muted">(optionnel)</small></label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
+                    <div id="champs-enseignant" style="display:none;">
+                        <div class="row mb-3">
+                            <div class="col-md-6"><label class="form-label">Spécialité</label><input type="text" name="specialite" class="form-control"></div>
+                            <div class="col-md-6"><label class="form-label">Téléphone</label><input type="text" name="telephone" class="form-control"></div>
+                        </div>
+                    </div>
+                    <div id="champs-parent" style="display:none;">
+                        <div class="row mb-3">
+                            <div class="col-md-6"><label class="form-label">Téléphone</label><input type="text" name="telephone" class="form-control"></div>
+                            <div class="col-md-6"><label class="form-label">Tél. secondaire</label><input type="text" name="telephone_secondaire" class="form-control"></div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info"><i class="bi bi-info-circle"></i> Le matricule et le mot de passe seront générés automatiquement.</div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-vert"><i class="bi bi-check-lg"></i> Créer</button>
+                        <a href="{% url 'super_admin:utilisateurs' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('role-select').addEventListener('change', function() {
+    document.getElementById('champs-enseignant').style.display = this.value === 'ENSEIGNANT' ? 'block' : 'none';
+    document.getElementById('champs-parent').style.display = this.value === 'PARENT' ? 'block' : 'none';
+});
+</script>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Gestion 3 — Suivi{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion3:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:presences' %}"><i class="bi bi-clipboard-check"></i> Présences</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:enseignants_filiere' %}"><i class="bi bi-person-workspace"></i> Enseignants</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:alertes' %}"><i class="bi bi-exclamation-triangle"></i> Alertes</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-4"><i class="bi bi-clipboard-check text-vert"></i> Gestion 3 — Suivi & Contrôle</h4>
+<div class="row g-3 mb-4">
+    <div class="col-md-6"><div class="card stat-card stat-danger"><span class="stat-value">{{ total_alertes }}</span><span class="stat-label">Alertes d'assiduité</span></div></div>
+    <div class="col-md-6">
+        <div class="card p-3">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'gestion3:presences' %}" class="btn btn-vert"><i class="bi bi-clipboard-check"></i> Gérer les présences</a>
+                <a href="{% url 'gestion3:alertes' %}" class="btn btn-outline-vert"><i class="bi bi-exclamation-triangle"></i> Voir les alertes</a>
+                <a href="{% url 'gestion3:enseignants_filiere' %}" class="btn btn-outline-vert"><i class="bi bi-person-workspace"></i> Enseignants par filière</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% if alertes_presences %}
+<div class="card">
+    <div class="card-header-vert"><i class="bi bi-exclamation-triangle"></i> Étudiants en alerte (assiduité < seuil)</div>
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Matricule</th><th>Nom</th><th>Filière</th><th>Taux présence</th><th>Absences</th></tr></thead>
+            <tbody>
+                {% for a in alertes_presences %}
+                <tr>
+                    <td><code>{{ a.matricule }}</code></td>
+                    <td>{{ a.nom }} {{ a.prenom }}</td>
+                    <td>{{ a.filiere }}</td>
+                    <td><span class="badge badge-danger">{{ a.taux }}%</span></td>
+                    <td>{{ a.absences }}/{{ a.total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

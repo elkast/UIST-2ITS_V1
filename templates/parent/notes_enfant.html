@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Notes — {{ etudiant.id_user.prenom }}{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'parent:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'parent:notifications' %}"><i class="bi bi-bell"></i> Notifications</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-journal-check text-vert"></i> Notes de {{ etudiant.id_user.prenom }} {{ etudiant.id_user.nom }}</h4>
+{% if moyenne %}
+<div class="alert alert-success"><i class="bi bi-trophy"></i> <strong>Moyenne :</strong> {{ moyenne }}/20</div>
+{% endif %}
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Cours</th><th>Note</th><th>Type</th><th>Date</th></tr></thead>
+            <tbody>
+                {% for n in notes %}
+                <tr>
+                    <td>{{ n.id_cours.libelle }}</td>
+                    <td><strong class="{% if n.valeur_note >= 10 %}text-vert{% else %}text-danger{% endif %}">{{ n.valeur_note }}/20</strong></td>
+                    <td><span class="badge badge-info">{{ n.type_evaluation }}</span></td>
+                    <td class="small">{{ n.date_saisie|date:"d/m/Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-muted py-3">Aucune note validée</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<a href="{% url 'parent:dashboard' %}" class="btn btn-outline-secondary mt-3"><i class="bi bi-arrow-left"></i> Retour</a>
+{% endblock %}

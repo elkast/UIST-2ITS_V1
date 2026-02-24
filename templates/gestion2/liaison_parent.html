@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Nouvelle liaison{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:etudiants' %}"><i class="bi bi-mortarboard"></i> Étudiants</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:parents' %}"><i class="bi bi-people"></i> Parents</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion2:liaisons' %}"><i class="bi bi-link-45deg"></i> Liaisons</a></li>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-link"></i> Nouvelle liaison parent-étudiant</div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Parent *</label>
+                        <select name="parent_id" class="form-select" required>
+                            <option value="">Sélectionnez</option>
+                            {% for p in parents %}<option value="{{ p.pk }}">{{ p.id_user.matricule }} — {{ p }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Étudiant *</label>
+                        <select name="etudiant_id" class="form-select" required>
+                            <option value="">Sélectionnez</option>
+                            {% for e in etudiants %}<option value="{{ e.pk }}">{{ e.id_user.matricule }} — {{ e }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lien de parenté *</label>
+                        <select name="lien_parente" class="form-select" required>
+                            {% for l in liens %}<option value="{{ l }}">{{ l }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-vert"><i class="bi bi-check-lg"></i> Créer la liaison</button>
+                        <a href="{% url 'gestion2:liaisons' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

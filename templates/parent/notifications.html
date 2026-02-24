@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'parent:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'parent:notifications' %}"><i class="bi bi-bell"></i> Notifications</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-bell text-vert"></i> Mes notifications</h4>
+<div class="card">
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for n in notifications %}
+            <div class="list-group-item {% if not n.est_lue %}bg-vert-clair{% endif %}">
+                <div class="d-flex justify-content-between">
+                    <strong>{{ n.titre }}</strong>
+                    <small class="text-muted">{{ n.date_creation|date:"d/m/Y H:i" }}</small>
+                </div>
+                <p class="small text-muted mb-0">{{ n.message }}</p>
+            </div>
+            {% empty %}
+            <div class="list-group-item text-center text-muted py-3">Aucune notification</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

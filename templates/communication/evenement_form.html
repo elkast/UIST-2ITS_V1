@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if evenement %}Modifier{% else %}Créer{% endif %} un Événement - UIST-2ITS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="mb-4">
+        <i class="bi bi-calendar-event"></i> 
+        {% if evenement %}Modifier{% else %}Créer{% endif %} un Événement
+    </h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="titre" class="form-label">Titre *</label>
+                    <input type="text" class="form-control" id="titre" name="titre" 
+                           value="{{ evenement.titre|default:'' }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="type_evenement" class="form-label">Type</label>
+                    <select class="form-select" id="type_evenement" name="type_evenement">
+                        <option value="EVENEMENT" {% if evenement.type_evenement == 'EVENEMENT' %}selected{% endif %}>Événement</option>
+                        <option value="VIDEO" {% if evenement.type_evenement == 'VIDEO' %}selected{% endif %}>Vidéo</option>
+                        <option value="ANNONCE" {% if evenement.type_evenement == 'ANNONCE' %}selected{% endif %}>Annonce</option>
+                        <option value="ACTUALITE" {% if evenement.type_evenement == 'ACTUALITE' %}selected{% endif %}>Actualité</option>
+                        <option value="ALERTE" {% if evenement.type_evenement == 'ALERTE' %}selected{% endif %}>Alerte</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description *</label>
+                    <textarea class="form-control" id="description" name="description" rows="5" required>{{ evenement.description|default:'' }}</textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="url_video" class="form-label">URL Vidéo (YouTube, Vimeo...)</label>
+                    <input type="url" class="form-control" id="url_video" name="url_video" 
+                           value="{{ evenement.url_video|default:'' }}" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="date_evenement" class="form-label">Date de l'événement</label>
+                        <input type="datetime-local" class="form-control" id="date_evenement" name="date_evenement" 
+                               value="{{ evenement.date_evenement|date:'Y-m-d\TH:i'|default:'' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="lieu" class="form-label">Lieu</label>
+                        <input type="text" class="form-control" id="lieu" name="lieu" 
+                               value="{{ evenement.lieu|default:'' }}">
+                    </div>
+                </div>
+                
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="est_publie" name="est_publie" 
+                           {% if evenement.est_publie %}checked{% endif %}>
+                    <label class="form-check-label" for="est_publie">
+                        Publié
+                    </label>
+                </div>
+                
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="est_urgent" name="est_urgent" 
+                           {% if evenement.est_urgent %}checked{% endif %}>
+                    <label class="form-check-label" for="est_urgent">
+                        Urgent
+                    </label>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'communication:liste_evenements' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Annuler
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

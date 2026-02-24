@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{% if etudiant %}Modifier étudiant{% else %}Nouvel étudiant{% endif %}{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion2:etudiants' %}"><i class="bi bi-mortarboard"></i> Étudiants</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:parents' %}"><i class="bi bi-people"></i> Parents</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:saisie_notes' %}"><i class="bi bi-pencil-square"></i> Notes</a></li>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-person-plus"></i> {% if etudiant %}Modifier étudiant{% else %}Nouvel étudiant{% endif %}</div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row mb-3">
+                        <div class="col-md-6"><label class="form-label">Nom *</label><input type="text" name="nom" class="form-control" value="{% if etudiant %}{{ etudiant.id_user.nom }}{% endif %}" required></div>
+                        <div class="col-md-6"><label class="form-label">Prénom *</label><input type="text" name="prenom" class="form-control" value="{% if etudiant %}{{ etudiant.id_user.prenom }}{% endif %}" required></div>
+                    </div>
+                    <div class="mb-3"><label class="form-label">Email <small class="text-muted">(optionnel)</small></label><input type="email" name="email" class="form-control" value="{% if etudiant %}{{ etudiant.id_user.email }}{% endif %}"></div>
+                    <div class="mb-3">
+                        <label class="form-label">Filière *</label>
+                        <select name="filiere_id" class="form-select" required>
+                            {% for f in filieres %}<option value="{{ f.pk }}" {% if etudiant and etudiant.filiere_id == f.pk %}selected{% endif %}>{{ f.nom_filiere }} ({{ f.niveau }})</option>{% endfor %}
+                        </select>
+                    </div>
+                    {% if etudiant %}
+                    <div class="mb-3"><label class="form-label">Adresse</label><textarea name="adresse" class="form-control" rows="2">{{ etudiant.adresse }}</textarea></div>
+                    {% endif %}
+                    {% if not etudiant %}<div class="alert alert-info"><i class="bi bi-info-circle"></i> Le matricule et le mot de passe seront générés automatiquement.</div>{% endif %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-vert"><i class="bi bi-check-lg"></i> {% if etudiant %}Modifier{% else %}Créer{% endif %}</button>
+                        <a href="{% url 'gestion2:etudiants' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

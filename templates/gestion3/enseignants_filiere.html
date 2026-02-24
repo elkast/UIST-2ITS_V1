@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Enseignants par filière{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:presences' %}"><i class="bi bi-clipboard-check"></i> Présences</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion3:enseignants_filiere' %}"><i class="bi bi-person-workspace"></i> Enseignants</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:alertes' %}"><i class="bi bi-exclamation-triangle"></i> Alertes</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-person-workspace text-vert"></i> Enseignants par filière</h4>
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="GET" class="d-flex gap-2 align-items-center">
+            <label class="form-label mb-0 fw-bold small">Filière :</label>
+            <select name="filiere_id" class="form-select form-select-sm" style="max-width:280px;" onchange="this.form.submit()">
+                <option value="">Toutes</option>
+                {% for f in filieres %}<option value="{{ f.pk }}" {% if filiere_id == f.pk|stringformat:"d" %}selected{% endif %}>{{ f.nom_filiere }} ({{ f.niveau }})</option>{% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Enseignant</th><th>Matricule</th><th>Cours</th><th>Filière</th><th>Niveau</th></tr></thead>
+            <tbody>
+                {% for a in assignations %}
+                <tr>
+                    <td>{{ a.enseignant }}</td>
+                    <td><code>{{ a.enseignant.id_user.matricule }}</code></td>
+                    <td>{{ a.cours.libelle }}</td>
+                    <td>{{ a.cours.filiere.nom_filiere }}</td>
+                    <td><span class="badge badge-vert">{{ a.cours.filiere.niveau }}</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-3">Aucune assignation</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

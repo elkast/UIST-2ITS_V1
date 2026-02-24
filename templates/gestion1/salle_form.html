@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{% if salle %}Modifier salle{% else %}Nouvelle salle{% endif %}{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion1:salles' %}"><i class="bi bi-building"></i> Salles</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:filieres' %}"><i class="bi bi-diagram-3"></i> Filières</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:cours' %}"><i class="bi bi-book"></i> Cours</a></li>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-building"></i> {% if salle %}Modifier « {{ salle.nom_salle }}»{% else %}Nouvelle salle{% endif %}</div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row mb-3">
+                        <div class="col-md-6"><label class="form-label">Nom de la salle *</label><input type="text" name="nom_salle" class="form-control" value="{{ salle.nom_salle|default:'' }}" required></div>
+                        <div class="col-md-3"><label class="form-label">Capacité</label><input type="number" name="capacite" class="form-control" value="{{ salle.capacite|default:30 }}"></div>
+                        <div class="col-md-3"><label class="form-label">Bâtiment</label><input type="text" name="batiment" class="form-control" value="{{ salle.batiment|default:'' }}"></div>
+                    </div>
+                    <h6 class="fw-bold mt-4 mb-3 text-vert"><i class="bi bi-tools"></i> Équipements</h6>
+                    <div class="row mb-3 g-3">
+                        <div class="col-md-4"><label class="form-label">Projecteurs</label><input type="number" name="nb_projecteurs" class="form-control" value="{{ salle.nb_projecteurs|default:0 }}" min="0"></div>
+                        <div class="col-md-4"><label class="form-label">Ordinateurs</label><input type="number" name="nb_ordinateurs" class="form-control" value="{{ salle.nb_ordinateurs|default:0 }}" min="0"></div>
+                        <div class="col-md-4"><label class="form-label">Rallonges</label><input type="number" name="nb_rallonges" class="form-control" value="{{ salle.nb_rallonges|default:0 }}" min="0"></div>
+                        <div class="col-md-4"><label class="form-label">Chargeurs</label><input type="number" name="nb_chargeurs" class="form-control" value="{{ salle.nb_chargeurs|default:0 }}" min="0"></div>
+                        <div class="col-md-4"><label class="form-label">Adaptateurs</label><input type="number" name="nb_adaptateurs" class="form-control" value="{{ salle.nb_adaptateurs|default:0 }}" min="0"></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-vert"><i class="bi bi-check-lg"></i> {% if salle %}Modifier{% else %}Créer{% endif %}</button>
+                        <a href="{% url 'gestion1:salles' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Directeur — Dashboard{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link active" href="{% url 'directeur:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:validation_notes' %}"><i class="bi bi-check2-square"></i> Notes</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:edt' %}"><i class="bi bi-calendar3"></i> EDT</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:disponibilites' %}"><i class="bi bi-clock"></i> Disponibilités</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:rapports' %}"><i class="bi bi-bar-chart"></i> Rapports</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:utilisateurs' %}"><i class="bi bi-people"></i> Utilisateurs</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-4"><i class="bi bi-mortarboard text-vert"></i> Tableau de bord — Directeur</h4>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-2"><div class="card stat-card"><span class="stat-value">{{ total_etudiants }}</span><span class="stat-label">Étudiants</span></div></div>
+    <div class="col-md-2"><div class="card stat-card stat-info"><span class="stat-value">{{ total_enseignants }}</span><span class="stat-label">Enseignants</span></div></div>
+    <div class="col-md-2"><div class="card stat-card"><span class="stat-value">{{ total_parents }}</span><span class="stat-label">Parents</span></div></div>
+    <div class="col-md-2"><div class="card stat-card"><span class="stat-value">{{ total_filieres }}</span><span class="stat-label">Filières</span></div></div>
+    <div class="col-md-2"><div class="card stat-card stat-warning"><span class="stat-value">{{ notes_attente_count }}</span><span class="stat-label">Notes à valider</span></div></div>
+    <div class="col-md-2"><div class="card stat-card stat-info"><span class="stat-value">{{ total_creneaux }}</span><span class="stat-label">Créneaux EDT</span></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-lightning"></i> Actions rapides</div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'directeur:validation_notes' %}" class="btn btn-vert"><i class="bi bi-check2-square"></i> Valider les notes ({{ notes_attente_count }})</a>
+                    <a href="{% url 'directeur:nouveau_creneau' %}" class="btn btn-outline-vert"><i class="bi bi-plus-circle"></i> Nouveau créneau EDT</a>
+                    <a href="{% url 'directeur:generer_edt' %}" class="btn btn-outline-vert"><i class="bi bi-magic"></i> Générer EDT auto</a>
+                    <a href="{% url 'directeur:rapports' %}" class="btn btn-outline-vert"><i class="bi bi-bar-chart"></i> Rapports</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-bell"></i> Notifications</div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for notif in notifications %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <strong class="small">{{ notif.titre }}</strong>
+                            <small class="text-muted">{{ notif.date_creation|date:"d/m H:i" }}</small>
+                        </div>
+                        <p class="small text-muted mb-0">{{ notif.message|truncatewords:15 }}</p>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item text-center text-muted small">Aucune notification</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Audit — Super Admin{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:utilisateurs' %}"><i class="bi bi-people"></i> Utilisateurs</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'super_admin:audit' %}"><i class="bi bi-journal-text"></i> Audit</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:rapports' %}"><i class="bi bi-file-earmark-bar-graph"></i> Rapports</a></li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-journal-text text-vert"></i> Journal d'audit</h4>
+    <div class="export-btns">
+        <a href="?export=pdf" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-pdf"></i> PDF</a>
+        <a href="?export=excel" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Table</th><th>Détails</th><th>IP</th></tr></thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td class="small">{{ log.date_action|date:"d/m/Y H:i" }}</td>
+                    <td>{{ log.nom_utilisateur }}</td>
+                    <td><span class="badge badge-info">{{ log.get_action_display }}</span></td>
+                    <td><code>{{ log.table_affectee|default:"-" }}</code></td>
+                    <td class="small">{{ log.details|truncatewords:12 }}</td>
+                    <td class="small text-muted">{{ log.ip_address|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-3">Aucun log</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

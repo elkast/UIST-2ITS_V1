@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Rapports — Directeur{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:validation_notes' %}"><i class="bi bi-check2-square"></i> Notes</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:edt' %}"><i class="bi bi-calendar3"></i> EDT</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:disponibilites' %}"><i class="bi bi-clock"></i> Disponibilités</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'directeur:rapports' %}"><i class="bi bi-bar-chart"></i> Rapports</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:utilisateurs' %}"><i class="bi bi-people"></i> Utilisateurs</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-4"><i class="bi bi-bar-chart text-vert"></i> Rapports pédagogiques</h4>
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card service-card h-100">
+            <i class="bi bi-graph-up-arrow mb-2"></i>
+            <h6 class="fw-bold">Performance par filière</h6>
+            <p class="small text-muted">Moyennes générales par filière et niveau</p>
+            <div class="d-flex gap-1 justify-content-center">
+                <a href="?type=performance&export=pdf" class="btn btn-sm btn-outline-vert"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="?type=performance&export=excel" class="btn btn-sm btn-vert"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card service-card h-100">
+            <i class="bi bi-people mb-2"></i>
+            <h6 class="fw-bold">Effectifs par rôle</h6>
+            <p class="small text-muted">Répartition des utilisateurs actifs/inactifs</p>
+            <div class="d-flex gap-1 justify-content-center">
+                <a href="?type=effectifs&export=pdf" class="btn btn-sm btn-outline-vert"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="?type=effectifs&export=excel" class="btn btn-sm btn-vert"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card service-card h-100">
+            <i class="bi bi-exclamation-triangle mb-2" style="color:var(--danger)"></i>
+            <h6 class="fw-bold">Absences critiques</h6>
+            <p class="small text-muted">Étudiants avec taux de présence faible</p>
+            <div class="d-flex gap-1 justify-content-center">
+                <a href="?type=absences&export=pdf" class="btn btn-sm btn-outline-vert"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="?type=absences&export=excel" class="btn btn-sm btn-vert"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

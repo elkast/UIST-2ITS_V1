@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Présences{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion3:presences' %}"><i class="bi bi-clipboard-check"></i> Présences</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:enseignants_filiere' %}"><i class="bi bi-person-workspace"></i> Enseignants</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:alertes' %}"><i class="bi bi-exclamation-triangle"></i> Alertes</a></li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4><i class="bi bi-clipboard-check text-vert"></i> Suivi des présences</h4>
+    {% if filiere_id %}
+    <div class="export-btns">
+        <a href="?filiere_id={{ filiere_id }}&export=pdf" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-pdf"></i> PDF</a>
+        <a href="?filiere_id={{ filiere_id }}&export=excel" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+    </div>
+    {% endif %}
+</div>
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="GET" class="d-flex gap-2 align-items-center">
+            <label class="form-label mb-0 fw-bold small">Filière :</label>
+            <select name="filiere_id" class="form-select form-select-sm" style="max-width:280px;" onchange="this.form.submit()">
+                <option value="">Sélectionnez</option>
+                {% for f in filieres %}<option value="{{ f.pk }}" {% if filiere_id == f.pk|stringformat:"d" %}selected{% endif %}>{{ f.nom_filiere }} ({{ f.niveau }})</option>{% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+{% if filiere_id %}
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-calendar3"></i> Créneaux de la filière</div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for c in creneaux %}
+                    <a href="{% url 'gestion3:marquer_presences' c.pk %}" class="list-group-item list-group-item-action">
+                        <strong>{{ c.jour }}</strong> {{ c.heure_debut|time:"H:i" }}-{{ c.heure_fin|time:"H:i" }}<br>
+                        <small class="text-muted">{{ c.cours.libelle }} — {{ c.enseignant }}</small>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-center text-muted">Aucun créneau</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-people"></i> Étudiants de la filière</div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0">
+                    <thead><tr><th>Matricule</th><th>Nom</th><th>Prénom</th></tr></thead>
+                    <tbody>
+                        {% for e in etudiants %}
+                        <tr><td><code>{{ e.id_user.matricule }}</code></td><td>{{ e.id_user.nom }}</td><td>{{ e.id_user.prenom }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-center text-muted py-3">Aucun étudiant</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

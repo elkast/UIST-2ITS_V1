@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Alertes assiduité{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:presences' %}"><i class="bi bi-clipboard-check"></i> Présences</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:enseignants_filiere' %}"><i class="bi bi-person-workspace"></i> Enseignants</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion3:alertes' %}"><i class="bi bi-exclamation-triangle"></i> Alertes</a></li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4><i class="bi bi-exclamation-triangle text-danger"></i> Alertes d'assiduité</h4>
+    <div class="export-btns">
+        <a href="?export=pdf" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-pdf"></i> PDF</a>
+        <a href="?export=excel" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Matricule</th><th>Nom</th><th>Prénom</th><th>Filière</th><th>Taux</th><th>Absences</th><th>Contacts parents</th></tr></thead>
+            <tbody>
+                {% for a in alertes_presences %}
+                <tr>
+                    <td><code>{{ a.matricule }}</code></td>
+                    <td>{{ a.nom }}</td>
+                    <td>{{ a.prenom }}</td>
+                    <td>{{ a.filiere }} ({{ a.niveau }})</td>
+                    <td><span class="badge badge-danger">{{ a.taux }}%</span></td>
+                    <td>{{ a.absences }}/{{ a.total }}</td>
+                    <td>
+                        {% for cp in a.contacts_parents %}
+                        <small><i class="bi bi-telephone"></i> {{ cp.nom }} ({{ cp.lien }}) : {{ cp.telephone }}</small><br>
+                        {% empty %}
+                        <small class="text-muted">Aucun contact</small>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-3">Aucune alerte — tous les étudiants sont assidus !</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

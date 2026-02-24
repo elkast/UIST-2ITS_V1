@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{% if filiere %}Modifier filière{% else %}Nouvelle filière{% endif %}{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:salles' %}"><i class="bi bi-building"></i> Salles</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion1:filieres' %}"><i class="bi bi-diagram-3"></i> Filières</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:cours' %}"><i class="bi bi-book"></i> Cours</a></li>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-diagram-3"></i> {% if filiere %}Modifier filière{% else %}Nouvelle filière{% endif %}</div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3"><label class="form-label">Code filière *</label><input type="text" name="code_filiere" class="form-control" value="{{ filiere.code_filiere|default:'' }}" required></div>
+                    <div class="mb-3"><label class="form-label">Nom *</label><input type="text" name="nom_filiere" class="form-control" value="{{ filiere.nom_filiere|default:'' }}" required></div>
+                    <div class="mb-3">
+                        <label class="form-label">Niveau *</label>
+                        <select name="niveau" class="form-select" required>
+                            {% for code, label in niveaux %}
+                            <option value="{{ code }}" {% if filiere and filiere.niveau == code %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if filiere %}
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="est_active" id="estActive" {% if filiere.est_active %}checked{% endif %}>
+                        <label class="form-check-label" for="estActive">Filière active</label>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-vert"><i class="bi bi-check-lg"></i> {% if filiere %}Modifier{% else %}Créer{% endif %}</button>
+                        <a href="{% url 'gestion1:filieres' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

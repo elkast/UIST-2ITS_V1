@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}EDT — {{ etudiant.id_user.prenom }}{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'parent:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'parent:notifications' %}"><i class="bi bi-bell"></i> Notifications</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-calendar3 text-vert"></i> EDT de {{ etudiant.id_user.prenom }} — {{ etudiant.filiere.nom_filiere }}</h4>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Jour</th><th>Début</th><th>Fin</th><th>Cours</th><th>Enseignant</th><th>Salle</th></tr></thead>
+            <tbody>
+                {% for c in creneaux %}
+                <tr>
+                    <td><strong>{{ c.jour }}</strong></td>
+                    <td>{{ c.heure_debut|time:"H:i" }}</td>
+                    <td>{{ c.heure_fin|time:"H:i" }}</td>
+                    <td>{{ c.cours.libelle }}</td>
+                    <td>{{ c.enseignant }}</td>
+                    <td>{{ c.salle.nom_salle }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-3">Aucun créneau</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<a href="{% url 'parent:dashboard' %}" class="btn btn-outline-secondary mt-3"><i class="bi bi-arrow-left"></i> Retour</a>
+{% endblock %}

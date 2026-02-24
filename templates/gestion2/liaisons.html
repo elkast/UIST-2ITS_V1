@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Liaisons parent-étudiant{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:etudiants' %}"><i class="bi bi-mortarboard"></i> Étudiants</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:parents' %}"><i class="bi bi-people"></i> Parents</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:saisie_notes' %}"><i class="bi bi-pencil-square"></i> Notes</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion2:liaisons' %}"><i class="bi bi-link-45deg"></i> Liaisons</a></li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4><i class="bi bi-link-45deg text-vert"></i> Liaisons parent ↔ étudiant</h4>
+    <a href="{% url 'gestion2:liaison_parent' %}" class="btn btn-vert"><i class="bi bi-plus-circle"></i> Nouvelle liaison</a>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Parent</th><th>Lien</th><th>Étudiant</th><th>Filière</th></tr></thead>
+            <tbody>
+                {% for l in liaisons %}
+                <tr>
+                    <td>{{ l.parent.id_user.nom }} {{ l.parent.id_user.prenom }}</td>
+                    <td><span class="badge badge-vert">{{ l.lien_parente }}</span></td>
+                    <td>{{ l.etudiant.id_user.nom }} {{ l.etudiant.id_user.prenom }}</td>
+                    <td>{{ l.etudiant.filiere.nom_filiere }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-muted py-3">Aucune liaison</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

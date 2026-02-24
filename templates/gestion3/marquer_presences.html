@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Marquer présences{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion3:presences' %}"><i class="bi bi-clipboard-check"></i> Présences</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion3:alertes' %}"><i class="bi bi-exclamation-triangle"></i> Alertes</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-clipboard-check text-vert"></i> Pointage — {{ creneau.jour }} {{ creneau.heure_debut|time:"H:i" }}-{{ creneau.heure_fin|time:"H:i" }}</h4>
+<p class="text-muted mb-3"><strong>{{ creneau.cours.libelle }}</strong> — {{ creneau.enseignant }} — Salle {{ creneau.salle.nom_salle }}</p>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead><tr><th>Matricule</th><th>Nom</th><th>Prénom</th><th>Statut</th></tr></thead>
+                <tbody>
+                    {% for e in etudiants %}
+                    <tr>
+                        <td><code>{{ e.id_user.matricule }}</code></td>
+                        <td>{{ e.id_user.nom }}</td>
+                        <td>{{ e.id_user.prenom }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% for s in statuts %}
+                                <input type="radio" class="btn-check" name="statut_{{ e.pk }}" id="s_{{ e.pk }}_{{ s }}" value="{{ s }}">
+                                <label class="btn {% if s == 'Present' %}btn-outline-success{% elif s == 'Absent' %}btn-outline-danger{% elif s == 'Retard' %}btn-outline-warning{% else %}btn-outline-info{% endif %}" for="s_{{ e.pk }}_{{ s }}">{{ s }}</label>
+                                {% endfor %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-vert"><i class="bi bi-check-lg"></i> Enregistrer les présences</button>
+        <a href="{% url 'gestion3:presences' %}" class="btn btn-outline-secondary">Retour</a>
+    </div>
+</form>
+{% endblock %}

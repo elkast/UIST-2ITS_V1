@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Étudiants{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion2:etudiants' %}"><i class="bi bi-mortarboard"></i> Étudiants</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:parents' %}"><i class="bi bi-people"></i> Parents</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:saisie_notes' %}"><i class="bi bi-pencil-square"></i> Notes</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:import_notes' %}"><i class="bi bi-upload"></i> Import</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:liaisons' %}"><i class="bi bi-link-45deg"></i> Liaisons</a></li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4><i class="bi bi-mortarboard text-vert"></i> Liste des étudiants</h4>
+    <div class="d-flex gap-2">
+        <a href="{% url 'gestion2:nouvel_etudiant' %}" class="btn btn-vert"><i class="bi bi-person-plus"></i> Nouveau</a>
+        <a href="?filiere_id={{ filiere_id|default:'' }}&export=excel" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+        <a href="?filiere_id={{ filiere_id|default:'' }}&export=pdf" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-pdf"></i> PDF</a>
+    </div>
+</div>
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="GET" class="d-flex gap-2 align-items-center">
+            <label class="form-label mb-0 fw-bold small">Filière :</label>
+            <select name="filiere_id" class="form-select form-select-sm" style="max-width:280px;" onchange="this.form.submit()">
+                <option value="">Toutes</option>
+                {% for f in filieres %}<option value="{{ f.pk }}" {% if filiere_id == f.pk|stringformat:"d" %}selected{% endif %}>{{ f.nom_filiere }} ({{ f.niveau }})</option>{% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Matricule</th><th>Nom</th><th>Prénom</th><th>Filière</th><th>Niveau</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for e in etudiants %}
+                <tr>
+                    <td><code>{{ e.id_user.matricule }}</code></td>
+                    <td>{{ e.id_user.nom }}</td>
+                    <td>{{ e.id_user.prenom }}</td>
+                    <td>{{ e.filiere.nom_filiere }}</td>
+                    <td><span class="badge badge-vert">{{ e.filiere.niveau }}</span></td>
+                    <td><a href="{% url 'gestion2:modifier_etudiant' e.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-3">Aucun étudiant</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

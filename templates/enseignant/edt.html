@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Mon emploi du temps{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'enseignant:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'enseignant:edt' %}"><i class="bi bi-calendar3"></i> Mon EDT</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'enseignant:disponibilites' %}"><i class="bi bi-clock"></i> Disponibilités</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'enseignant:notes' %}"><i class="bi bi-journal-check"></i> Notes</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-calendar3 text-vert"></i> Mon emploi du temps</h4>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Jour</th><th>Début</th><th>Fin</th><th>Cours</th><th>Filière</th><th>Salle</th><th>Type</th></tr></thead>
+            <tbody>
+                {% for c in creneaux %}
+                <tr>
+                    <td><strong>{{ c.jour }}</strong></td>
+                    <td>{{ c.heure_debut|time:"H:i" }}</td>
+                    <td>{{ c.heure_fin|time:"H:i" }}</td>
+                    <td>{{ c.cours.libelle }}</td>
+                    <td>{{ c.cours.filiere.nom_filiere }}</td>
+                    <td>{{ c.salle.nom_salle }}</td>
+                    <td><span class="badge badge-vert">{{ c.type_creneau }}</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-3">Aucun créneau</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

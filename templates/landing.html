@@ -1,0 +1,377 @@
+{% load static communication_extras %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIST — Université Internationale des Sciences et Technologies</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+    .star-rating { display: flex; flex-direction: row-reverse; justify-content: center; gap: 5px; }
+    .star-rating input { display: none; }
+    .star-rating label { font-size: 2rem; color: #ddd; cursor: pointer; transition: color 0.2s; }
+    .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color: #ffc107; }
+    .event-card { transition: transform 0.3s; }
+    .event-card:hover { transform: translateY(-5px); }
+    .badge-urgent { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-uist">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="{% static 'images/logo2.png' %}" alt="UIST" onerror="this.style.display='none'">
+                <span>UIST-2ITS</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navLanding">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navLanding">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="#programmes">Programmes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#actualites">Actualités</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                </ul>
+                <a href="{% url 'accounts:login' %}" class="btn btn-light btn-sm fw-bold text-success">
+                    <i class="bi bi-box-arrow-in-right"></i> Connexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <p class="section-titre" style="color:rgba(255,255,255,0.8);">BIENVENUE À L'UIST</p>
+                    <h1 class="mb-4">Formez-vous aux métiers<br>de demain avec une<br><strong>stratégie personnalisée</strong></h1>
+                    <p class="lead mb-4">
+                        L'Université Internationale des Sciences et Technologies propose des programmes en économie, droit et technologies numériques à Cocody, Abidjan.
+                    </p>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-light btn-lg fw-bold text-success me-2">
+                        <i class="bi bi-box-arrow-in-right"></i> Se connecter
+                    </a>
+                    <a href="#contact" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-envelope"></i> Nous contacter
+                    </a>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <img src="{% static 'images/logo2.png' %}" alt="UIST" class="img-fluid" style="max-width:280px;filter:brightness(0) invert(1);opacity:0.3;" onerror="this.style.display='none'">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Formulaire de contact -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <span class="badge bg-warning text-dark mb-3 px-3 py-2">
+                        <i class="bi bi-star-fill"></i> EXCLUSIF POUR LES FUTURS ÉTUDIANTS
+                    </span>
+                    <h2 class="mb-3">Demandez des informations sur nos programmes <strong class="text-vert">gratuitement</strong>.</h2>
+                    <p class="text-muted mb-3">
+                        Remplissez le formulaire pour recevoir des informations détaillées sur nos programmes et filières disponibles.
+                    </p>
+                    <p class="fw-bold"><i class="bi bi-arrow-right text-vert me-2"></i>Remplissez le formulaire et recevez votre guide !</p>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card p-4" style="border-top:3px solid var(--vert-primaire);">
+                        <form>
+                            <div class="mb-3">
+                                <input type="text" class="form-control" placeholder="Votre nom complet">
+                            </div>
+                            <div class="mb-3">
+                                <input type="email" class="form-control" placeholder="Votre e-mail">
+                            </div>
+                            <div class="mb-3">
+                                <input type="tel" class="form-control" placeholder="Votre téléphone">
+                            </div>
+                            <div class="mb-3">
+                                <select class="form-select">
+                                    <option>Filière souhaitée</option>
+                                    <option>Sciences Informatiques</option>
+                                    <option>Gestion Commerciale</option>
+                                    <option>Droit Privé</option>
+                                    <option>Intelligence Artificielle</option>
+                                    <option>Réseaux et Télécommunications</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-vert w-100 py-2 text-uppercase fw-bold">
+                                Demander des informations
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Méthode / Parcours -->
+    <section class="py-5 section-bg">
+        <div class="container text-center">
+            <p class="section-titre">NOTRE MÉTHODE</p>
+            <h2 class="mb-2">Un parcours structuré pour votre réussite académique</h2>
+            <p class="text-muted mb-5">Le système UIST vous accompagne à chaque étape !</p>
+
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="feature-icon"><i class="bi bi-person-plus"></i></div>
+                    <h6 class="fw-bold">1. Inscription</h6>
+                    <p class="text-muted small">Inscription simple et rapide via notre plateforme sécurisée.</p>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-icon"><i class="bi bi-calendar-check"></i></div>
+                    <h6 class="fw-bold">2. Suivi Personnalisé</h6>
+                    <p class="text-muted small">Emploi du temps, notes et présences en temps réel.</p>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                    <h6 class="fw-bold">3. Évaluation Continue</h6>
+                    <p class="text-muted small">Système de notation transparent et validé.</p>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-icon"><i class="bi bi-trophy"></i></div>
+                    <h6 class="fw-bold">4. Réussite</h6>
+                    <p class="text-muted small">Bulletins, classements et insertion professionnelle.</p>
+                </div>
+            </div>
+
+            <a href="{% url 'accounts:login' %}" class="btn btn-vert mt-4">
+                <i class="bi bi-arrow-right-circle"></i> Accéder à la plateforme
+            </a>
+        </div>
+    </section>
+
+    <!-- Programmes -->
+    <section id="programmes" class="py-5">
+        <div class="container">
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-5">
+                    <p class="section-titre">PROGRAMMES PERSONNALISÉS</p>
+                    <h2>L'UIST adapte ses <strong>programmes à vos ambitions</strong>.</h2>
+                    <p class="text-muted mb-4">
+                        Du BTS au Master, nous proposons des cursus variés pour répondre à vos objectifs professionnels.
+                    </p>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-bold small"><i class="bi bi-laptop me-1"></i> Sciences Informatiques</span>
+                            <span class="small text-vert">90%</span>
+                        </div>
+                        <div class="progress-vert"><div class="progress-bar" style="width:90%"></div></div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-bold small"><i class="bi bi-briefcase me-1"></i> Gestion & Commerce</span>
+                            <span class="small text-vert">75%</span>
+                        </div>
+                        <div class="progress-vert"><div class="progress-bar" style="width:75%"></div></div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-bold small"><i class="bi bi-shield-check me-1"></i> Droit</span>
+                            <span class="small text-vert">85%</span>
+                        </div>
+                        <div class="progress-vert"><div class="progress-bar" style="width:85%"></div></div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="row g-3">
+                        <div class="col-6"><div class="card service-card"><i class="bi bi-book mb-2"></i><h6>Système LMD</h6><p class="small text-muted mb-0">Licence, Master, Doctorat</p></div></div>
+                        <div class="col-6"><div class="card service-card"><i class="bi bi-wifi mb-2"></i><h6>Wi-Fi Campus</h6><p class="small text-muted mb-0">Accès haut débit gratuit</p></div></div>
+                        <div class="col-6"><div class="card service-card"><i class="bi bi-journal-text mb-2"></i><h6>E-Learning</h6><p class="small text-muted mb-0">Plateforme en ligne</p></div></div>
+                        <div class="col-6"><div class="card service-card"><i class="bi bi-people mb-2"></i><h6>Encadrement</h6><p class="small text-muted mb-0">Suivi personnalisé</p></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services -->
+    <section id="services" class="py-5 section-bg">
+        <div class="container text-center">
+            <p class="section-titre">NOS SERVICES</p>
+            <h2 class="mb-2">Tout ce que nous offrons à nos étudiants</h2>
+            <p class="text-muted mb-5">Une équipe complète à votre disposition !</p>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card service-card h-100"><i class="bi bi-mortarboard mb-2"></i><h6 class="fw-bold">BTS & Licences</h6><p class="small text-muted">Comptabilité, Gestion Commerciale, Informatique</p></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100"><i class="bi bi-diagram-3 mb-2"></i><h6 class="fw-bold">Masters</h6><p class="small text-muted">IA, Audit, Réseaux & Télécommunications</p></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100"><i class="bi bi-globe mb-2"></i><h6 class="fw-bold">Plateforme Numérique</h6><p class="small text-muted">Notes, EDT, bulletins accessibles en ligne</p></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100"><i class="bi bi-chat-dots mb-2"></i><h6 class="fw-bold">Suivi Parental</h6><p class="small text-muted">Les parents suivent la scolarité en temps réel</p></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100"><i class="bi bi-file-earmark-pdf mb-2"></i><h6 class="fw-bold">Rapports & Bulletins</h6><p class="small text-muted">Export PDF et Excel automatisé</p></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100"><i class="bi bi-shield-lock mb-2"></i><h6 class="fw-bold">Sécurité</h6><p class="small text-muted">Accès sécurisé par matricule et mot de passe</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Actualités et Événements -->
+    <section id="actualites" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <p class="section-titre">RESTEZ INFORMÉ</p>
+                <h2 class="mb-2">Actualités et <strong>Événements</strong></h2>
+                <p class="text-muted">Suivez les dernières nouvelles de l'UIST-2ITS</p>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Événements publiés -->
+                {% get_published_evenements as evenements %}
+                {% if evenements %}
+                {% for evenement in evenements %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 event-card border-0 shadow-sm">
+                        {% if evenement.est_urgent %}
+                        <span class="badge bg-danger position-absolute top-0 end-0 m-2 badge-urgent">
+                            <i class="bi bi-exclamation-triangle"></i> Urgent
+                        </span>
+                        {% endif %}
+                        <div class="card-body">
+                            <span class="badge bg-{% if evenement.type_evenement == 'VIDEO' %}danger{% elif evenement.type_evenement == 'ANNONCE' %}warning{% else %}info{% endif %} mb-2">
+                                {% if evenement.type_evenement == 'VIDEO' %}<i class="bi bi-play-circle"></i>{% elif evenement.type_evenement == 'ANNONCE' %}<i class="bi bi-megaphone"></i>{% else %}<i class="bi bi-calendar-event"></i>{% endif %}
+                                {{ evenement.get_type_evenement_display }}
+                            </span>
+                            <h5 class="card-title fw-bold">{{ evenement.titre }}</h5>
+                            <p class="card-text text-muted small">{{ evenement.description|truncatewords:20 }}</p>
+                            {% if evenement.date_evenement %}
+                            <p class="small text-muted mb-0">
+                                <i class="bi bi-clock me-1"></i> {{ evenement.date_evenement|date:"d/m/Y H:i" }}
+                            </p>
+                            {% endif %}
+                            {% if evenement.lieu %}
+                            <p class="small text-muted mb-0">
+                                <i class="bi bi-geo-alt me-1"></i> {{ evenement.lieu }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+                
+                <!-- Publications affichées sur accueil -->
+                {% get_publications_accueil as publications %}
+                {% if publications %}
+                {% for publication in publications %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 event-card border-0 shadow-sm">
+                        <div class="card-body">
+                            <span class="badge bg-success mb-2">
+                                <i class="bi bi-newspaper"></i> Actualité
+                            </span>
+                            <h5 class="card-title fw-bold">{{ publication.titre }}</h5>
+                            <p class="card-text text-muted small">{{ publication.contenu|truncatewords:20 }}</p>
+                            <p class="small text-muted mb-0">
+                                <i class="bi bi-calendar me-1"></i> {{ publication.date_creation|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+                
+                {% if not evenements and not publications %}
+                <div class="col-12 text-center">
+                    <p class="text-muted">Aucune actualité pour le moment. Revenez bientôt !</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="text-center mt-4">
+                <a href="{% url 'accounts:login' %}" class="btn btn-outline-success">
+                    <i class="bi bi-box-arrow-in-right"></i> Connectez-vous pour plus d'actualités
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="py-5">
+        <div class="container">
+            <div class="row g-4 text-center">
+                <div class="col-12 mb-3">
+                    <h2>Contactez-nous</h2>
+                    <p class="text-muted">Prêt à rejoindre notre communauté ?</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100"><i class="bi bi-telephone mb-2"></i><h6>Téléphone</h6><p class="small text-muted mb-0">+225 XX XX XX XX XX</p></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100"><i class="bi bi-envelope mb-2"></i><h6>Email</h6><p class="small text-muted mb-0">uist-2its.edu.ci</p></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100"><i class="bi bi-geo-alt mb-2"></i><h6>Adresse</h6><p class="small text-muted mb-0">Cocody, Abidjan — Côte d'Ivoire</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feedback Section -->
+    <section class="py-5 section-bg">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <div class="text-center mb-4">
+                        <p class="section-titre">VOTRE AVIS COMPTE</p>
+                        <h3>Évaluez notre plateforme</h3>
+                        <p class="text-muted">Partagez votre expérience pour nous aider à nous améliorer</p>
+                    </div>
+                    <div class="card p-4">
+                        <form method="POST" action="{% url 'accounts:feedback' %}">
+                            {% csrf_token %}
+                            <div class="text-center mb-4">
+                                <label class="form-label fw-bold">Notez votre expérience</label>
+                                <div class="star-rating">
+                                    <input type="radio" id="star5" name="note" value="5"><label for="star5" title="5 étoiles"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star4" name="note" value="4"><label for="star4" title="4 étoiles"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star3" name="note" value="3"><label for="star3" title="3 étoiles"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star2" name="note" value="2"><label for="star2" title="2 étoiles"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star1" name="note" value="1"><label for="star1" title="1 étoile"><i class="bi bi-star-fill"></i></label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Votre email (optionnel)</label>
+                                <input type="email" name="email" class="form-control" placeholder="email@exemple.com">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Commentaires (optionnel)</label>
+                                <textarea name="commentaire" class="form-control" rows="3" placeholder="Vos suggestions..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-vert w-100 fw-bold">
+                                <i class="bi bi-send"></i> Envoyer mon avis
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-uist text-center">
+        <p class="mb-0">&copy; 2026 UIST — Tous droits réservés- Dev:Elkast — uist.edu.ci</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

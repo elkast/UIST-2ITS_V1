@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Cours{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:salles' %}"><i class="bi bi-building"></i> Salles</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:filieres' %}"><i class="bi bi-diagram-3"></i> Filières</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion1:cours' %}"><i class="bi bi-book"></i> Cours</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:assignation' %}"><i class="bi bi-link-45deg"></i> Assignation</a></li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4><i class="bi bi-book text-vert"></i> Gestion des cours</h4>
+    <div class="d-flex gap-2">
+        <a href="{% url 'gestion1:nouveau_cours' %}" class="btn btn-vert"><i class="bi bi-plus-circle"></i> Nouveau cours</a>
+        <a href="?filiere_id={{ filiere_id|default:'' }}&export=excel" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+        <a href="?filiere_id={{ filiere_id|default:'' }}&export=pdf" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-pdf"></i> PDF</a>
+    </div>
+</div>
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="GET" class="d-flex gap-2 align-items-center">
+            <label class="form-label mb-0 fw-bold small">Filière :</label>
+            <select name="filiere_id" class="form-select form-select-sm" style="max-width:280px;" onchange="this.form.submit()">
+                <option value="">Toutes</option>
+                {% for f in filieres %}
+                <option value="{{ f.pk }}" {% if filiere_id == f.pk|stringformat:"d" %}selected{% endif %}>{{ f.nom_filiere }} ({{ f.niveau }})</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Code</th><th>Libellé</th><th>Crédits</th><th>Vol. horaire</th><th>Filière</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for c in cours %}
+                <tr>
+                    <td><code>{{ c.code_cours }}</code></td>
+                    <td>{{ c.libelle }}</td>
+                    <td>{{ c.credit }}</td>
+                    <td>{{ c.volume_horaire }}h</td>
+                    <td>{{ c.filiere.nom_filiere }}</td>
+                    <td><span class="badge {% if c.statut == 'Actif' %}badge-vert{% else %}badge-danger{% endif %}">{{ c.statut }}</span></td>
+                    <td><a href="{% url 'gestion1:modifier_cours' c.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-3">Aucun cours</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

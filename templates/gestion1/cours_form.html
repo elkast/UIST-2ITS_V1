@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{% if cours %}Modifier cours{% else %}Nouveau cours{% endif %}{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:salles' %}"><i class="bi bi-building"></i> Salles</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:filieres' %}"><i class="bi bi-diagram-3"></i> Filières</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion1:cours' %}"><i class="bi bi-book"></i> Cours</a></li>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-book"></i> {% if cours %}Modifier cours{% else %}Nouveau cours{% endif %}</div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row mb-3">
+                        <div class="col-md-4"><label class="form-label">Code *</label><input type="text" name="code_cours" class="form-control" value="{{ cours.code_cours|default:'' }}" required></div>
+                        <div class="col-md-8"><label class="form-label">Libellé *</label><input type="text" name="libelle" class="form-control" value="{{ cours.libelle|default:'' }}" required></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><label class="form-label">Crédits</label><input type="number" name="credit" class="form-control" value="{{ cours.credit|default:3 }}" min="1"></div>
+                        <div class="col-md-4"><label class="form-label">Vol. horaire (h)</label><input type="number" name="volume_horaire" class="form-control" value="{{ cours.volume_horaire|default:0 }}" min="0"></div>
+                        <div class="col-md-4">
+                            <label class="form-label">Filière *</label>
+                            <select name="filiere_id" class="form-select" required>
+                                {% for f in filieres %}
+                                <option value="{{ f.pk }}" {% if cours and cours.filiere_id == f.pk %}selected{% endif %}>{{ f.nom_filiere }} ({{ f.niveau }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    {% if cours %}
+                    <div class="mb-3">
+                        <label class="form-label">Statut</label>
+                        <select name="statut" class="form-select">
+                            <option value="Actif" {% if cours.statut == "Actif" %}selected{% endif %}>Actif</option>
+                            <option value="Inactif" {% if cours.statut == "Inactif" %}selected{% endif %}>Inactif</option>
+                            <option value="Suspendu" {% if cours.statut == "Suspendu" %}selected{% endif %}>Suspendu</option>
+                        </select>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-vert"><i class="bi bi-check-lg"></i> {% if cours %}Modifier{% else %}Créer{% endif %}</button>
+                        <a href="{% url 'gestion1:cours' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

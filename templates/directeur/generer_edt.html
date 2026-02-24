@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Générer EDT automatiquement{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:validation_notes' %}"><i class="bi bi-check2-square"></i> Notes</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'directeur:edt' %}"><i class="bi bi-calendar3"></i> EDT</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:disponibilites' %}"><i class="bi bi-clock"></i> Disponibilités</a></li>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-magic"></i> Génération automatique de l'EDT</div>
+            <div class="card-body p-4">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Cette action génère l'emploi du temps en se basant sur les disponibilités des enseignants et les cours de la filière sélectionnée.
+                </div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Filière *</label>
+                        <select name="filiere_id" class="form-select" required>
+                            <option value="">Sélectionnez une filière</option>
+                            {% for f in filieres %}
+                            <option value="{{ f.pk }}">{{ f.nom_filiere }} ({{ f.niveau }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-vert" onclick="return confirm('Générer automatiquement l\'EDT pour cette filière ?')"><i class="bi bi-magic"></i> Générer l'EDT</button>
+                        <a href="{% url 'directeur:edt' %}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

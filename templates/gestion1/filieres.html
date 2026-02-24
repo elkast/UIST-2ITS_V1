@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Filières{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:salles' %}"><i class="bi bi-building"></i> Salles</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion1:filieres' %}"><i class="bi bi-diagram-3"></i> Filières</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:cours' %}"><i class="bi bi-book"></i> Cours</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion1:assignation' %}"><i class="bi bi-link-45deg"></i> Assignation</a></li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4><i class="bi bi-diagram-3 text-vert"></i> Filières</h4>
+    <a href="{% url 'gestion1:nouvelle_filiere' %}" class="btn btn-vert"><i class="bi bi-plus-circle"></i> Nouvelle filière</a>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Code</th><th>Nom</th><th>Niveau</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for f in filieres %}
+                <tr>
+                    <td><code>{{ f.code_filiere }}</code></td>
+                    <td>{{ f.nom_filiere }}</td>
+                    <td><span class="badge badge-vert">{{ f.niveau }}</span></td>
+                    <td>{% if f.est_active %}<span class="badge badge-vert">Active</span>{% else %}<span class="badge badge-danger">Inactive</span>{% endif %}</td>
+                    <td><a href="{% url 'gestion1:modifier_filiere' f.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Modifier</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-3">Aucune filière</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

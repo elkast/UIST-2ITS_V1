@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Validation des notes{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'directeur:validation_notes' %}"><i class="bi bi-check2-square"></i> Notes</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:edt' %}"><i class="bi bi-calendar3"></i> EDT</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:disponibilites' %}"><i class="bi bi-clock"></i> Disponibilités</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:rapports' %}"><i class="bi bi-bar-chart"></i> Rapports</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'directeur:utilisateurs' %}"><i class="bi bi-people"></i> Utilisateurs</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-check2-square text-vert"></i> Validation des notes</h4>
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="GET" class="d-flex gap-2 align-items-center">
+            <label class="form-label mb-0 fw-bold small">Filière :</label>
+            <select name="filiere_id" class="form-select form-select-sm" style="max-width:280px;" onchange="this.form.submit()">
+                <option value="">Toutes les filières</option>
+                {% for f in filieres %}
+                <option value="{{ f.pk }}" {% if filiere_id == f.pk|stringformat:"d" %}selected{% endif %}>{{ f.nom_filiere }} ({{ f.niveau }})</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+<form method="POST" action="{% url 'directeur:valider_notes_masse' %}">
+    {% csrf_token %}
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all"></th>
+                        <th>Étudiant</th><th>Matricule</th><th>Cours</th><th>Filière</th><th>Note</th><th>Type</th><th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for note in notes %}
+                    <tr>
+                        <td><input type="checkbox" name="notes_selectionnees" value="{{ note.pk }}"></td>
+                        <td>{{ note.id_etudiant.id_user.nom }} {{ note.id_etudiant.id_user.prenom }}</td>
+                        <td><code>{{ note.id_etudiant.id_user.matricule }}</code></td>
+                        <td>{{ note.id_cours.libelle }}</td>
+                        <td>{{ note.id_cours.filiere.nom_filiere }}</td>
+                        <td><strong>{{ note.valeur_note }}/20</strong></td>
+                        <td><span class="badge badge-info">{{ note.type_evaluation }}</span></td>
+                        <td class="small">{{ note.date_saisie|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted py-3">Aucune note en attente</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if notes %}
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" name="action" value="valider" class="btn btn-vert"><i class="bi bi-check-lg"></i> Valider la sélection</button>
+        <button type="submit" name="action" value="rejeter" class="btn btn-danger-uist"><i class="bi bi-x-lg"></i> Rejeter la sélection</button>
+    </div>
+    {% endif %}
+</form>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('select-all').addEventListener('change', function() {
+    document.querySelectorAll('input[name="notes_selectionnees"]').forEach(function(cb) { cb.checked = this.checked; }.bind(this));
+});
+</script>
+{% endblock %}

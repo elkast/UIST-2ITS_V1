@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Mon profil{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'etudiant:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'etudiant:edt' %}"><i class="bi bi-calendar3"></i> Mon EDT</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'etudiant:notes' %}"><i class="bi bi-journal-check"></i> Mes notes</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'etudiant:profil' %}"><i class="bi bi-person"></i> Profil</a></li>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-person"></i> Mon profil</div>
+            <div class="card-body p-4">
+                <div class="mb-3"><label class="form-label">Matricule</label><input type="text" class="form-control" value="{{ etudiant.id_user.matricule }}" disabled></div>
+                <div class="row mb-3">
+                    <div class="col-md-6"><label class="form-label">Nom</label><input type="text" class="form-control" value="{{ etudiant.id_user.nom }}" disabled></div>
+                    <div class="col-md-6"><label class="form-label">Prénom</label><input type="text" class="form-control" value="{{ etudiant.id_user.prenom }}" disabled></div>
+                </div>
+                <div class="mb-3"><label class="form-label">Filière</label><input type="text" class="form-control" value="{{ etudiant.filiere }}" disabled></div>
+                <hr>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3"><label class="form-label">Email</label><input type="email" name="email" class="form-control" value="{{ etudiant.id_user.email|default:'' }}"></div>
+                    <div class="mb-3"><label class="form-label">Adresse</label><textarea name="adresse" class="form-control" rows="2">{{ etudiant.adresse }}</textarea></div>
+                    <button type="submit" class="btn btn-vert"><i class="bi bi-check-lg"></i> Mettre à jour</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

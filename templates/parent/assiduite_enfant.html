@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Assiduité — {{ etudiant.id_user.prenom }}{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'parent:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'parent:notifications' %}"><i class="bi bi-bell"></i> Notifications</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-clipboard-check text-vert"></i> Assiduité de {{ etudiant.id_user.prenom }}</h4>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card stat-card"><span class="stat-value">{{ taux.taux }}%</span><span class="stat-label">Taux de présence</span></div></div>
+    <div class="col-md-3"><div class="card stat-card"><span class="stat-value">{{ taux.presents }}</span><span class="stat-label">Présences</span></div></div>
+    <div class="col-md-3"><div class="card stat-card stat-danger"><span class="stat-value">{{ taux.absents }}</span><span class="stat-label">Absences</span></div></div>
+    <div class="col-md-3"><div class="card stat-card stat-info"><span class="stat-value">{{ taux.total }}</span><span class="stat-label">Total séances</span></div></div>
+</div>
+
+{% if absences %}
+<div class="card">
+    <div class="card-header-vert"><i class="bi bi-exclamation-triangle"></i> Détail des absences</div>
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Date</th><th>Cours</th><th>Enseignant</th><th>Horaire</th></tr></thead>
+            <tbody>
+                {% for a in absences %}
+                <tr>
+                    <td>{{ a.date_pointage|date:"d/m/Y" }}</td>
+                    <td>{{ a.creneau.cours.libelle }}</td>
+                    <td>{{ a.creneau.enseignant }}</td>
+                    <td>{{ a.creneau.heure_debut|time:"H:i" }}-{{ a.creneau.heure_fin|time:"H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+<a href="{% url 'parent:dashboard' %}" class="btn btn-outline-secondary mt-3"><i class="bi bi-arrow-left"></i> Retour</a>
+{% endblock %}

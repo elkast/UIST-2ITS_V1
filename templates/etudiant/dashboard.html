@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Étudiant — Dashboard{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link active" href="{% url 'etudiant:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'etudiant:edt' %}"><i class="bi bi-calendar3"></i> Mon EDT</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'etudiant:notes' %}"><i class="bi bi-journal-check"></i> Mes notes</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'etudiant:profil' %}"><i class="bi bi-person"></i> Profil</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'etudiant:notifications' %}"><i class="bi bi-bell"></i> Notifications</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-4"><i class="bi bi-mortarboard text-vert"></i> Bienvenue, {{ etudiant.id_user.prenom }} !</h4>
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <span class="stat-value">{% if moyenne %}{{ moyenne }}{% else %}—{% endif %}</span>
+            <span class="stat-label">Moyenne générale</span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card stat-info">
+            <span class="stat-value">{% if rang %}{{ rang }}{% else %}—{% endif %}</span>
+            <span class="stat-label">Rang</span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3">
+            <p class="small mb-1"><strong>Matricule :</strong> <code>{{ etudiant.id_user.matricule }}</code></p>
+            <p class="small mb-1"><strong>Filière :</strong> {{ etudiant.filiere.nom_filiere }} ({{ etudiant.filiere.niveau }})</p>
+            <p class="small mb-0"><strong>Email :</strong> {{ etudiant.id_user.email|default:"Non renseigné" }}</p>
+        </div>
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-md-4"><a href="{% url 'etudiant:edt' %}" class="card service-card d-block text-center text-decoration-none"><i class="bi bi-calendar3 mb-2"></i><h6>Mon emploi du temps</h6><p class="small text-muted mb-0">Consulter en temps réel</p></a></div>
+    <div class="col-md-4"><a href="{% url 'etudiant:notes' %}" class="card service-card d-block text-center text-decoration-none"><i class="bi bi-journal-check mb-2"></i><h6>Mes notes</h6><p class="small text-muted mb-0">Notes validées uniquement</p></a></div>
+    <div class="col-md-4"><a href="{% url 'etudiant:profil' %}" class="card service-card d-block text-center text-decoration-none"><i class="bi bi-person mb-2"></i><h6>Mon profil</h6><p class="small text-muted mb-0">Modifier mes informations</p></a></div>
+</div>
+{% endblock %}

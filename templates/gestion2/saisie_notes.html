@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Saisie des notes{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:etudiants' %}"><i class="bi bi-mortarboard"></i> Étudiants</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:parents' %}"><i class="bi bi-people"></i> Parents</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'gestion2:saisie_notes' %}"><i class="bi bi-pencil-square"></i> Notes</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:import_notes' %}"><i class="bi bi-upload"></i> Import</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'gestion2:liaisons' %}"><i class="bi bi-link-45deg"></i> Liaisons</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-pencil-square text-vert"></i> Saisie des notes</h4>
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-plus-circle"></i> Nouvelle note</div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Étudiant *</label>
+                        <select name="etudiant_id" class="form-select" required>
+                            <option value="">Sélectionnez</option>
+                            {% for e in etudiants %}<option value="{{ e.pk }}">{{ e.id_user.matricule }} — {{ e }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cours *</label>
+                        <select name="cours_id" class="form-select" required>
+                            <option value="">Sélectionnez</option>
+                            {% for c in cours %}<option value="{{ c.pk }}">{{ c.code_cours }} — {{ c.libelle }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6"><label class="form-label">Note /20 *</label><input type="number" name="valeur_note" class="form-control" min="0" max="20" step="0.25" required></div>
+                        <div class="col-6">
+                            <label class="form-label">Type</label>
+                            <select name="type_evaluation" class="form-select">
+                                {% for t in types_eval %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-vert w-100"><i class="bi bi-check-lg"></i> Enregistrer</button>
+                </form>
+                <hr>
+                <form method="POST" action="{% url 'gestion2:valider_notifier' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-vert w-100"><i class="bi bi-bell"></i> Notifier le directeur</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-clock-history"></i> Notes récentes</div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0">
+                    <thead><tr><th>Étudiant</th><th>Cours</th><th>Note</th><th>Type</th><th>Statut</th></tr></thead>
+                    <tbody>
+                        {% for n in notes %}
+                        <tr>
+                            <td>{{ n.id_etudiant.id_user.nom }} {{ n.id_etudiant.id_user.prenom }}</td>
+                            <td>{{ n.id_cours.libelle }}</td>
+                            <td><strong>{{ n.valeur_note }}/20</strong></td>
+                            <td><span class="badge badge-info">{{ n.type_evaluation }}</span></td>
+                            <td>
+                                {% if n.statut_validation == "Valide" %}<span class="badge badge-vert">Validé</span>
+                                {% elif n.statut_validation == "Rejete" %}<span class="badge badge-danger">Rejeté</span>
+                                {% else %}<span class="badge badge-warning">En attente</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">Aucune note</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

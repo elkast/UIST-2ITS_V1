@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Rapports — Super Admin{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:utilisateurs' %}"><i class="bi bi-people"></i> Utilisateurs</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:audit' %}"><i class="bi bi-journal-text"></i> Audit</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'super_admin:rapports' %}"><i class="bi bi-file-earmark-bar-graph"></i> Rapports</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-4"><i class="bi bi-file-earmark-bar-graph text-vert"></i> Rapports globaux</h4>
+<div class="row g-3">
+    <div class="col-md-6 col-lg-3">
+        <div class="card service-card h-100">
+            <i class="bi bi-mortarboard mb-2"></i>
+            <h6 class="fw-bold">Étudiants inscrits</h6>
+            <p class="small text-muted">Liste complète de tous les étudiants</p>
+            <div class="d-flex gap-1 justify-content-center">
+                <a href="?type=etudiants&export=pdf" class="btn btn-sm btn-outline-vert"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="?type=etudiants&export=excel" class="btn btn-sm btn-vert"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card service-card h-100">
+            <i class="bi bi-person-workspace mb-2"></i>
+            <h6 class="fw-bold">Enseignants</h6>
+            <p class="small text-muted">Tous les enseignants et spécialités</p>
+            <div class="d-flex gap-1 justify-content-center">
+                <a href="?type=enseignants&export=pdf" class="btn btn-sm btn-outline-vert"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="?type=enseignants&export=excel" class="btn btn-sm btn-vert"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card service-card h-100">
+            <i class="bi bi-people mb-2"></i>
+            <h6 class="fw-bold">Parents</h6>
+            <p class="small text-muted">Tous les parents et coordonnées</p>
+            <div class="d-flex gap-1 justify-content-center">
+                <a href="?type=parents&export=pdf" class="btn btn-sm btn-outline-vert"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="?type=parents&export=excel" class="btn btn-sm btn-vert"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card service-card h-100">
+            <i class="bi bi-link-45deg mb-2"></i>
+            <h6 class="fw-bold">Liaisons parent-étudiant</h6>
+            <p class="small text-muted">Toutes les associations</p>
+            <div class="d-flex gap-1 justify-content-center">
+                <a href="?type=liaisons&export=pdf" class="btn btn-sm btn-outline-vert"><i class="bi bi-file-pdf"></i> PDF</a>
+                <a href="?type=liaisons&export=excel" class="btn btn-sm btn-vert"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Mes disponibilités{% endblock %}
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link" href="{% url 'enseignant:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'enseignant:edt' %}"><i class="bi bi-calendar3"></i> Mon EDT</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'enseignant:disponibilites' %}"><i class="bi bi-clock"></i> Disponibilités</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'enseignant:notes' %}"><i class="bi bi-journal-check"></i> Notes</a></li>
+{% endblock %}
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-clock text-vert"></i> Mes disponibilités</h4>
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-plus-circle"></i> Ajouter une disponibilité</div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <label class="form-label">Jour *</label>
+                        <select name="jour" class="form-select" required>
+                            {% for j in jours %}<option value="{{ j }}">{{ j }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><label class="form-label">Début</label><input type="time" name="heure_debut" class="form-control" required></div>
+                        <div class="col-6"><label class="form-label">Fin</label><input type="time" name="heure_fin" class="form-control" required></div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="est_disponible" id="estDispo" checked>
+                        <label class="form-check-label" for="estDispo">Disponible</label>
+                    </div>
+                    <button type="submit" class="btn btn-vert w-100"><i class="bi bi-plus"></i> Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-list"></i> Mes créneaux</div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0">
+                    <thead><tr><th>Jour</th><th>Début</th><th>Fin</th><th>Statut</th><th></th></tr></thead>
+                    <tbody>
+                        {% for d in disponibilites %}
+                        <tr>
+                            <td>{{ d.jour }}</td>
+                            <td>{{ d.heure_debut|time:"H:i" }}</td>
+                            <td>{{ d.heure_fin|time:"H:i" }}</td>
+                            <td>{% if d.est_disponible %}<span class="badge badge-vert">Disponible</span>{% else %}<span class="badge badge-danger">Indisponible</span>{% endif %}</td>
+                            <td><a href="{% url 'enseignant:supprimer_dispo' d.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer ?')"><i class="bi bi-trash"></i></a></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">Aucune disponibilité</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

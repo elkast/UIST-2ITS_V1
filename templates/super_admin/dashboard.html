@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Super Admin — Dashboard{% endblock %}
+
+{% block nav_links %}
+<li class="nav-item"><a class="nav-link active" href="{% url 'super_admin:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:utilisateurs' %}"><i class="bi bi-people"></i> Utilisateurs</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:audit' %}"><i class="bi bi-journal-text"></i> Audit</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'super_admin:rapports' %}"><i class="bi bi-file-earmark-bar-graph"></i> Rapports</a></li>
+{% endblock %}
+
+{% block content %}
+<h4 class="mb-4"><i class="bi bi-shield-lock text-vert"></i> Tableau de bord — Super Administrateur</h4>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card stat-card"><span class="stat-value">{{ total_users }}</span><span class="stat-label">Utilisateurs</span></div></div>
+    <div class="col-md-3"><div class="card stat-card stat-info"><span class="stat-value">{{ connexions_jour }}</span><span class="stat-label">Connexions aujourd'hui</span></div></div>
+    <div class="col-md-3"><div class="card stat-card"><span class="stat-value">{{ stats_roles|length }}</span><span class="stat-label">Rôles actifs</span></div></div>
+    <div class="col-md-3">
+        <div class="card p-3 text-center">
+            <a href="{% url 'super_admin:nouvel_utilisateur' %}" class="btn btn-vert w-100"><i class="bi bi-person-plus"></i> Nouvel utilisateur</a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-people"></i> Répartition par rôle</div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0">
+                    <thead><tr><th>Rôle</th><th class="text-center">Effectif</th></tr></thead>
+                    <tbody>
+                        {% for stat in stats_roles %}
+                        <tr><td>{{ stat.role }}</td><td class="text-center"><span class="badge badge-vert">{{ stat.total }}</span></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-clock-history"></i> Activité récente</div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0">
+                    <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th></tr></thead>
+                    <tbody>
+                        {% for log in logs_recents %}
+                        <tr>
+                            <td class="small">{{ log.date_action|date:"d/m/Y H:i" }}</td>
+                            <td>{{ log.nom_utilisateur }}</td>
+                            <td><span class="badge badge-info">{{ log.get_action_display }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-center text-muted">Aucune activité</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header-vert"><i class="bi bi-lightning"></i> Actions rapides</div>
+            <div class="card-body">
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'super_admin:nouvel_utilisateur' %}" class="btn btn-vert"><i class="bi bi-person-plus"></i> Nouvel utilisateur</a>
+                    <a href="{% url 'super_admin:audit' %}" class="btn btn-outline-vert"><i class="bi bi-journal-text"></i> Consulter les logs</a>
+                    <a href="{% url 'super_admin:rapports' %}" class="btn btn-outline-vert"><i class="bi bi-file-earmark-bar-graph"></i> Rapports</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
