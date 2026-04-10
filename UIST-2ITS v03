@@ -1,0 +1,2191 @@
+# UIST-2ITS — Modélisation Complète du Système d'Information Universitaire
+## Université Internationale des Sciences et Technologies · Côte d'Ivoire
+
+> **Document de référence ingénierie — Version 2.0**
+> Toute équipe de développement ou IA doit pouvoir implémenter la plateforme intégralement à partir de ce seul document.
+
+---
+
+## TABLE DES MATIÈRES
+
+1. [Vision & Positionnement](#1-vision--positionnement)
+2. [Architecture Globale](#2-architecture-globale)
+3. [Structure Académique & Filières](#3-structure-académique--filières)
+4. [Système de Matricules](#4-système-de-matricules)
+5. [Hiérarchie des Acteurs](#5-hiérarchie-des-acteurs)
+6. [Modèle de Données](#6-modèle-de-données)
+7. [Fonctionnalités par Acteur — Spécification Chirurgicale](#7-fonctionnalités-par-acteur--spécification-chirurgicale)
+   - 7.1 Super Administrateur Technique
+   - 7.2 Directeur Général (DG)
+   - 7.3 Directeur d'Établissement
+   - 7.4 Administration — Scolarité
+   - 7.5 Administration — Comptabilité
+   - 7.6 Administration — Ressources Humaines
+   - 7.7 Enseignant
+   - 7.8 Étudiant
+   - 7.9 Parent/Tuteur
+8. [Mini-Bibliothèque Académique](#8-mini-bibliothèque-académique)
+9. [Diagrammes UML](#9-diagrammes-uml)
+10. [Règles Métier (RM)](#10-règles-métier-rm)
+11. [Système Temps Réel](#11-système-temps-réel)
+12. [UI/UX — Spécification Interface](#12-uiux--spécification-interface)
+13. [Micro-animations](#13-micro-animations)
+14. [Sécurité & Authentification](#14-sécurité--authentification)
+15. [Glossaire](#15-glossaire)
+
+---
+
+## 1. VISION & POSITIONNEMENT
+
+### 1.1 Objectif Stratégique
+
+UIST-2ITS est une plateforme de gestion universitaire multi-campus conçue pour l'Université Internationale des Sciences et Technologies de Côte d'Ivoire. Elle a pour vocation de devenir **la référence nationale** des systèmes d'information universitaires ivoiriens, permettant au Directeur Général de piloter **l'ensemble de ses établissements en temps réel depuis un seul tableau de bord**.
+
+### 1.2 Principes Fondateurs
+
+| Principe | Description | Pourquoi |
+|---|---|---|
+| **Moindre Privilège** | Chaque acteur n'accède qu'à ce dont il a besoin | Sécurité, intégrité des données |
+| **Séparation des Responsabilités** | Chaque pôle administratif a un périmètre défini | Clarté, auditabilité |
+| **Temps Réel** | Les données critiques (notes, présences, finance) sont synchronisées en temps réel | Réactivité institutionnelle |
+| **Auditabilité Totale** | Toute action est tracée avec auteur, horodatage, IP | Conformité, résolution de litiges |
+| **Multi-Campus** | Le DG voit tous les campus; les directeurs voient le leur | Scalabilité institutionnelle |
+| **UX Sage-Like** | Interface métier claire, dense en information utile, sans surcharge | Productivité des utilisateurs |
+
+### 1.3 Portée du Système
+
+```
+┌──────────────────────────────────────────────────────┐
+│  UIST-2ITS Platform                                   │
+│                                                        │
+│  ✓ Gestion académique complète                        │
+│  ✓ Gestion financière (frais, comptabilité)           │
+│  ✓ Communication institutionnelle                      │
+│  ✓ Mini-bibliothèque numérique par filière            │
+│  ✓ Temps réel via WebSocket                           │
+│  ✓ Export PDF/Excel institutionnel                    │
+│  ✓ Multi-campus sous un DG unique                     │
+│  ✓ Application mobile (PWA)                           │
+└──────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. ARCHITECTURE GLOBALE
+
+### 2.1 Couches Architecturales
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║  COUCHE 0 — INFRASTRUCTURE TECHNIQUE                          ║
+║  Super Admin Technique (accès root système)                   ║
+╠═══════════════════════════════════════════════════════════════╣
+║  COUCHE 1 — GOUVERNANCE MULTI-CAMPUS                          ║
+║  Directeur Général (DG) — Vision consolidée tous campus       ║
+╠═══════════════════════════════════════════════════════════════╣
+║  COUCHE 2 — GOUVERNANCE PAR ÉTABLISSEMENT                     ║
+║  Directeur d'Établissement — Pilotage pédagogique campus      ║
+╠═══════════════════════════════════════════════════════════════╣
+║  COUCHE 3 — ADMINISTRATION OPÉRATIONNELLE                     ║
+║  ┌─────────────┬──────────────┬────────────────────────┐     ║
+║  │  Scolarité  │ Comptabilité │  Ressources Humaines   │     ║
+║  │  (notes,PV, │ (frais,reçus)│  (enseignants,staff)   │     ║
+║  │  inscript.) │              │                        │     ║
+║  └─────────────┴──────────────┴────────────────────────┘     ║
+╠═══════════════════════════════════════════════════════════════╣
+║  COUCHE 4 — ACTEURS PÉDAGOGIQUES                              ║
+║  Enseignants — Cours, notes, disponibilités                   ║
+╠═══════════════════════════════════════════════════════════════╣
+║  COUCHE 5 — BÉNÉFICIAIRES                                     ║
+║  Étudiants — Consultation, bibliothèque, espace perso        ║
+║  Parents   — Suivi en temps réel des enfants                  ║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
+### 2.2 Stack Technique Recommandé
+
+| Composant | Technologie | Justification |
+|---|---|---|
+| **Backend** | Python / Django REST Framework | Robustesse, ORM puissant, admin auto |
+| **Base de données** | PostgreSQL 15+ | Fiabilité, JSONB pour configs dynamiques |
+| **Temps réel** | Django Channels + Redis | WebSocket natif, scalable |
+| **Cache** | Redis | Sessions, notifications, cache requêtes |
+| **Génération PDF** | WeasyPrint + Jinja2 | Bulletins, PV, reçus institutionnels |
+| **Export Excel** | OpenPyXL | Import/export notes, listes |
+| **Frontend** | React 18 + TypeScript | Composants réutilisables, typage strict |
+| **UI Framework** | Tailwind CSS + Radix UI | Personnalisation, accessibilité |
+| **Animations** | Framer Motion | Micro-interactions fluides |
+| **State Management** | Zustand + React Query | Légèreté, cache serveur synchronisé |
+| **Auth** | JWT (Access 15min + Refresh 7j) | Sécurité, multi-device |
+| **Stockage fichiers** | MinIO (S3-compatible) | PDFs, sujets bibliothèque |
+| **PWA** | Vite PWA Plugin | Application mobile sans app store |
+
+---
+
+## 3. STRUCTURE ACADÉMIQUE & FILIÈRES
+
+### 3.1 Arborescence des Filières
+
+```
+UIST-2ITS
+├── LICENCE (Grade : Licence · Domaine : Sciences & Technologies / DEG)
+│   ├── SI — Sciences Informatiques
+│   │   ├── DAWM — Développement d'Applications Web et Mobile     [L1→L3]
+│   │   ├── SI   — Systèmes Informatiques (réseau, sécurité)      [L1→L3]
+│   │   └── RIT  — Réseaux et Infrastructure Technologique        [L1→L3]
+│   ├── DROIT — Sciences Juridiques                               [L1→L3]
+│   ├── SEA   — Statistique et Économie Appliquée                 [L1→L3]
+│   └── SEG   — Sciences Économiques et de Gestion               [L1→L3]
+│
+└── BTS (Grade : BTS · Durée : 2 ans)
+    ├── GEC  — Gestion des Entreprises et des Comptabilités       [1ère→2ème]
+    ├── IDA  — Informatique et Développement d'Applications       [1ère→2ème]
+    └── FCGE — Finance, Comptabilité et Gestion des Entreprises   [1ère→2ème]
+```
+
+### 3.2 Définition des Filières
+
+#### LICENCE — Sciences Informatiques (SI)
+
+| Parcours | Code | Description | Débouchés |
+|---|---|---|---|
+| DAWM | SI-DAWM | Développement web full-stack, mobile Android/iOS, UX | Développeur full-stack, chef de projet digital |
+| SI | SI-SYS | Administration systèmes, cybersécurité, DevOps | Admin sys, ingénieur sécurité |
+| RIT | SI-RIT | Réseaux locaux, WAN, infrastructure cloud, IoT | Ingénieur réseau, architecte cloud |
+
+**Pourquoi distinguer DAWM/SI/RIT ?** Chaque parcours a ses propres UE, enseignants spécialisés, et débouchés. La plateforme doit gérer leurs EDT, notes et bibliothèques de façon indépendante tout en partageant les UE communes de L1.
+
+#### LICENCE — Droit (DROIT)
+
+| Niveau | Code | Spécificités |
+|---|---|---|
+| L1-L3 | LIC-DRT | UE communes : droit civil, pénal, constitutionnel. Examens en présentiel obligatoires, coefficient examen > 60% |
+
+#### LICENCE — SEA & SEG
+
+| Filière | Code | Distinction clé |
+|---|---|---|
+| SEA | LIC-SEA | Forte composante quantitative (stats, économétrie, Excel/R) |
+| SEG | LIC-SEG | Orientation gestion d'entreprise, marketing, management |
+
+**Pourquoi SEA et SEG séparées ?** Elles partagent des UE économiques en L1 mais divergent complètement en L2-L3. La plateforme doit gérer les UE mutualisées et les UE spécifiques à chaque filière.
+
+#### BTS
+
+| Filière | Code | Durée | Spécificités |
+|---|---|---|---|
+| GEC | BTS-GEC | 2 ans | Comptabilité générale, fiscalité ivoirienne (SYSCOHADA) |
+| IDA | BTS-IDA | 2 ans | Développement logiciel, base de données |
+| FCGE | BTS-FCGE | 2 ans | Finance d'entreprise, audit, contrôle de gestion |
+
+**Note SYSCOHADA :** Les filières comptables (GEC, FCGE) utilisent le référentiel comptable SYSCOHADA révisé, standard en Afrique de l'Ouest francophone. La plateforme doit en tenir compte dans les libellés de cours et modèles de documents.
+
+### 3.3 Structure d'une Unité d'Enseignement (UE)
+
+```
+UE (Unité d'Enseignement)
+├── Code UE           : MAT121, AEI122...
+├── Intitulé UE       : "Mathématiques 2"
+├── Filière           : SEA - L1
+├── Semestre          : S2
+├── Total crédits     : 6 (somme des ECUE)
+└── ECUE (Éléments Constitutifs d'UE)
+    ├── Code ECUE      : MAT1211
+    ├── Intitulé ECUE  : "Calcul intégral et Équations différentielles"
+    ├── Crédits        : 3
+    ├── Volume horaire : CM=15h | TD=10h | TP=0h
+    ├── Enseignant     : DR BAMBA
+    └── Coefficient    : défini par filière
+```
+
+**Pourquoi distinguer UE et ECUE ?** En système LMD ivoirien (conforme à l'espace CAMES), les notes sont saisies au niveau ECUE, la moyenne est calculée au niveau UE par crédit, et la validation se fait au niveau UE. La plateforme doit refléter cette granularité exacte.
+
+---
+
+## 4. SYSTÈME DE MATRICULES
+
+### 4.1 Format Standard Ivoirien Adapté UIST
+
+Le format matricule UIST s'inspire des pratiques des universités ivoiriennes (Université FHB, INPHB) et les standardise :
+
+```
+FORMAT : [INIT_NOM][INIT_PRENOM][ANNEE_ENTREE][CODE_FILIERE][SEQUENCE]
+
+Exemple :
+  Koné Adjoua Marie   → KA-2024-DAWM-0023
+  Bamba Kofi          → BK-2024-DRT-0001
+  Touré Ibrahim       → TI-2024-GEC-0012
+```
+
+**Règles de génération :**
+
+| Composant | Règle | Exemple |
+|---|---|---|
+| INIT_NOM | 1ère lettre du nom de famille (majuscule) | Koné → K |
+| INIT_PRENOM | 1ère lettre du prénom principal (majuscule) | Adjoua → A |
+| ANNEE | Année d'entrée en 4 chiffres | 2024 |
+| CODE_FILIERE | Code court de la filière (3-4 car.) | DAWM, DRT, SEA, GEC |
+| SEQUENCE | Numéro séquentiel sur 4 chiffres, remis à 0 par filière/année | 0023 |
+
+**Cas particuliers :**
+- Noms composés : on prend la 1ère lettre du 1er nom (N'Dri → N)
+- Homonymes initiaux : le séquenciel garantit l'unicité
+- Le matricule est **immuable** une fois attribué, même en cas de redoublement ou changement de filière
+- Un redoublant garde son matricule d'origine avec une note interne de redoublement
+
+**Matricules Administratifs :**
+```
+FORMAT : [CODE_ROLE]-[ANNEE]-[SEQUENCE]
+
+Directeur        : DIR-2024-001
+Scolarité        : SCO-2024-001
+Comptabilité     : CPT-2024-001
+RH               : RH-2024-001
+Enseignant       : ENS-2024-001
+DG               : DG-2024-001
+```
+
+---
+
+## 5. HIÉRARCHIE DES ACTEURS
+
+### 5.1 Niveaux d'Accès
+
+```
+NIVEAU 0 — SUPER ADMIN TECHNIQUE (Technicien système)
+    │  Accès : Toutes tables, configuration serveur, déploiement
+    │  Pas un acteur métier — accès infrastructure uniquement
+    │
+    ▼
+NIVEAU 1 — DIRECTEUR GÉNÉRAL (DG)
+    │  Accès : Tous campus en lecture + rapports consolidés
+    │  Peut : Modifier les filières, valider les directeurs, voir les finances globales
+    │  Ne peut pas : Toucher aux notes individuelles, aux dossiers étudiants directement
+    │
+    ▼
+NIVEAU 2 — DIRECTEUR D'ÉTABLISSEMENT (par campus)
+    │  Accès : Son campus uniquement
+    │  Peut : Tout ce que fait l'administration + validation finale des notes + arbitrage EDT
+    │  Ne peut pas : Accéder aux autres campus, modifier la configuration système
+    │
+    ▼
+NIVEAU 3 — ADMINISTRATION (3 pôles distincts)
+    │  ├── Scolarité  : inscriptions, notes, PV, bulletins
+    │  ├── Comptabilité : frais, reçus, états financiers
+    │  └── RH : enseignants, staff, contrats, salaires
+    │  Chaque pôle n'accède qu'à son périmètre
+    │
+    ▼
+NIVEAU 4 — ENSEIGNANT
+    │  Accès : Son EDT, ses cours, saisie de notes, disponibilités
+    │  Ne peut pas : Voir les notes des autres enseignants, données financières
+    │
+    ▼
+NIVEAU 5 — ÉTUDIANT
+    │  Accès : Ses propres données uniquement (notes validées, EDT de sa filière)
+    │  Plus : Mini-bibliothèque de sa filière
+    │
+    ▼
+NIVEAU 5 — PARENT/TUTEUR
+       Accès : Données de son/ses enfants uniquement
+       Plus : Notifications temps réel, emploi du temps
+```
+
+### 5.2 Matrice de Permissions
+
+| Action | Super Admin | DG | Directeur | Scolarité | Comptabilité | RH | Enseignant | Étudiant | Parent |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Config système | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Créer campus | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| CRUD filières | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Rapports multi-campus | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Valider notes | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Saisir notes | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| Créer EDT | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Inscrire étudiant | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Gérer frais | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Gérer enseignants | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Gérer bibliothèque | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ (partiel) | ❌ | ❌ |
+| Consulter ses notes | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Voir progrès enfant | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Générer PV | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Télécharger rapports | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (partiel) | ✅ (partiel) | ✅ (partiel) |
+
+---
+
+## 6. MODÈLE DE DONNÉES
+
+### 6.1 Schéma Conceptuel (ERD Textuel)
+
+```
+CAMPUS (1) ──────────────────── (N) UTILISATEURS
+   │                                    │
+   │                        ┌───────────┼───────────────┐
+   │                        │           │               │
+   │                   ENSEIGNANTS  ETUDIANTS        PARENTS
+   │                        │           │               │
+   │                        │     ┌─────┤               │
+   │                   DISPONIB.  NOTES  INSCRIPTIONS   │
+   │                        │     │      │               │
+   │                  FILIERES ───┴──────┘    LIAISON_PARENT_ETUDIANT
+   │                     │   │
+   │                     │   └── COURS ── ECUE
+   │                     │          │
+   │                  SEMESTRES     │
+   │                               │
+   SALLES ─── EMPLOI_DU_TEMPS ─────┘
+                    │
+               PRESENCES
+                    
+NOTES ── VALIDATION (Directeur) ── BULLETINS ── PV_JURY
+                    
+FRAIS_SCOLARITE ── PAIEMENTS ── REÇUS
+
+BIBLIOTHEQUE ── DOCUMENTS ── ACHATS
+
+MESSAGES ── NOTIFICATIONS
+
+AUDIT_LOG
+```
+
+### 6.2 Tables — Spécification Complète
+
+#### TABLE : campus
+```sql
+campus
+├── id              UUID PRIMARY KEY
+├── code            VARCHAR(10) UNIQUE        -- ex: UIST-ABJ, UIST-YAM
+├── nom             VARCHAR(150) NOT NULL     -- "UIST Abidjan - Riviera"
+├── ville           VARCHAR(100)
+├── adresse         TEXT
+├── telephone       VARCHAR(20)
+├── email_contact   VARCHAR(150)
+├── directeur_id    FK → utilisateurs(id)     -- directeur actif
+├── logo_url        VARCHAR(255)
+├── est_actif       BOOLEAN DEFAULT TRUE
+├── date_creation   TIMESTAMP
+└── config_locale   JSONB                     -- paramètres spécifiques campus
+```
+**Pourquoi JSONB pour config_locale ?** Chaque campus peut avoir des règles spécifiques (jours fériés, paramètres fiscaux locaux) sans altérer le schéma global.
+
+#### TABLE : utilisateurs
+```sql
+utilisateurs
+├── id              UUID PRIMARY KEY
+├── matricule       VARCHAR(20) UNIQUE NOT NULL   -- Format défini §4
+├── nom             VARCHAR(100) NOT NULL
+├── prenom          VARCHAR(150) NOT NULL          -- Peut être composé
+├── email           VARCHAR(150) UNIQUE NOT NULL
+├── telephone       VARCHAR(20)
+├── mot_de_passe    VARCHAR(255)                   -- Argon2id hash
+├── role            ENUM('SUPER_ADMIN','DG','DIRECTEUR','SCOLARITE',
+│                        'COMPTABILITE','RH','ENSEIGNANT','ETUDIANT','PARENT')
+├── campus_id       FK → campus(id)               -- NULL pour SUPER_ADMIN et DG
+├── est_actif       BOOLEAN DEFAULT TRUE
+├── photo_url       VARCHAR(255)
+├── date_naissance  DATE
+├── sexe            ENUM('M','F','Autre')
+├── nationalite     VARCHAR(100) DEFAULT 'Ivoirienne'
+├── date_creation   TIMESTAMP DEFAULT NOW()
+├── derniere_connexion TIMESTAMP
+├── preferences     JSONB                          -- thème, langue, notifications
+└── INDEX: (role, campus_id), (matricule), (email)
+```
+
+#### TABLE : filieres
+```sql
+filieres
+├── id              UUID PRIMARY KEY
+├── campus_id       FK → campus(id)
+├── code            VARCHAR(20) UNIQUE           -- SI-DAWM, LIC-DRT, BTS-GEC...
+├── nom             VARCHAR(150) NOT NULL
+├── grade           ENUM('LICENCE','BTS','MASTER','DOCTORAT')
+├── domaine         VARCHAR(100)                 -- "Sciences & Technologies", "DEG"
+├── parcours        VARCHAR(100)                 -- DAWM, SI, RIT (pour LICENCE SI)
+├── duree_annees    INT DEFAULT 3
+├── effectif_prevu  INT DEFAULT 50
+├── est_active      BOOLEAN DEFAULT TRUE
+├── responsable_id  FK → utilisateurs(id)       -- enseignant responsable filière
+├── description     TEXT
+├── couleur_badge   VARCHAR(7)                  -- #HEX pour badge UI
+└── date_creation   TIMESTAMP
+```
+
+#### TABLE : ue (Unités d'Enseignement)
+```sql
+ue
+├── id              UUID PRIMARY KEY
+├── filiere_id      FK → filieres(id)
+├── code_ue         VARCHAR(20) UNIQUE          -- MAT121, AEI122
+├── intitule        VARCHAR(200) NOT NULL       -- "Mathématiques 2"
+├── niveau          ENUM('L1','L2','L3','M1','M2','BTS1','BTS2')
+├── semestre        INT CHECK (semestre IN (1,2))
+├── total_credits   INT                         -- somme des crédits ECUE
+├── est_active      BOOLEAN DEFAULT TRUE
+└── INDEX: (filiere_id, niveau, semestre)
+```
+
+#### TABLE : ecue (Éléments Constitutifs d'UE)
+```sql
+ecue
+├── id              UUID PRIMARY KEY
+├── ue_id           FK → ue(id)
+├── code_ecue       VARCHAR(20) UNIQUE          -- MAT1211
+├── intitule        VARCHAR(200) NOT NULL       -- "Calcul intégral..."
+├── credits         INT NOT NULL CHECK (credits BETWEEN 1 AND 10)
+├── coefficient     DECIMAL(4,2) DEFAULT 1.00
+├── heures_cm       INT DEFAULT 0              -- Cours Magistral
+├── heures_td       INT DEFAULT 0              -- Travaux Dirigés
+├── heures_tp       INT DEFAULT 0              -- Travaux Pratiques
+├── enseignant_id   FK → enseignants(id)       -- enseignant principal
+└── est_active      BOOLEAN DEFAULT TRUE
+```
+
+**Pourquoi séparer UE et ECUE ?** Le système LMD impose la validation par UE (compensation possible entre ECUE d'une même UE) mais la saisie des notes se fait ECUE par ECUE. Cette structure permet de calculer la moyenne UE = somme(note_ECUE × credits_ECUE) / somme(credits_ECUE).
+
+#### TABLE : enseignants
+```sql
+enseignants
+├── id              UUID PRIMARY KEY
+├── utilisateur_id  FK → utilisateurs(id) UNIQUE
+├── grade           ENUM('Assistant','Chargé de Cours','Maître de Conf.',
+│                        'Professeur','Vacataire','Professionnel')
+├── specialite      VARCHAR(200)
+├── diplome_max     VARCHAR(150)              -- "Doctorat en Informatique"
+├── etablissement_origine VARCHAR(200)        -- pour vacataires extérieurs
+├── type_contrat    ENUM('Permanent','CDD','Vacataire')
+├── heures_service  DECIMAL(6,2) DEFAULT 192.0   -- quota horaire annuel
+├── heures_effectuees DECIMAL(6,2) DEFAULT 0
+├── salaire_horaire DECIMAL(10,2)            -- pour calcul paie vacataires
+└── date_prise_poste DATE
+```
+
+#### TABLE : etudiants
+```sql
+etudiants
+├── id              UUID PRIMARY KEY
+├── utilisateur_id  FK → utilisateurs(id) UNIQUE
+├── filiere_id      FK → filieres(id)
+├── niveau_actuel   ENUM('L1','L2','L3','M1','M2','BTS1','BTS2')
+├── annee_academique VARCHAR(9)               -- "2024-2025"
+├── date_naissance  DATE NOT NULL
+├── lieu_naissance  VARCHAR(150)
+├── adresse         TEXT
+├── situation       ENUM('Actif','Redoublant','Exclu','Diplômé','Transféré')
+│                        DEFAULT 'Actif'
+├── mention_bac     VARCHAR(50)
+├── serie_bac       VARCHAR(20)              -- A, C, D, G, T...
+├── annee_bac       INT
+├── etablissement_bac VARCHAR(200)
+└── photo_url       VARCHAR(255)
+```
+
+#### TABLE : annees_academiques
+```sql
+annees_academiques
+├── id              UUID PRIMARY KEY
+├── campus_id       FK → campus(id)
+├── libelle         VARCHAR(9) NOT NULL      -- "2024-2025"
+├── date_debut      DATE
+├── date_fin        DATE
+├── semestre_actuel INT CHECK (semestre_actuel IN (1,2))
+├── est_active      BOOLEAN DEFAULT FALSE    -- une seule active par campus
+└── UNIQUE (campus_id, libelle)
+```
+
+#### TABLE : emploi_du_temps
+```sql
+emploi_du_temps
+├── id              UUID PRIMARY KEY
+├── ecue_id         FK → ecue(id)
+├── enseignant_id   FK → enseignants(id)
+├── salle_id        FK → salles(id)
+├── filiere_id      FK → filieres(id)
+├── annee_academique_id FK → annees_academiques(id)
+├── jour            ENUM('Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi')
+├── heure_debut     TIME NOT NULL
+├── heure_fin       TIME NOT NULL
+├── semaine_debut   INT                      -- semaine ISO de début
+├── semaine_fin     INT                      -- semaine ISO de fin (cours récurrent)
+├── type_creneau    ENUM('CM','TD','TP','Examen','Rattrapage','Soutenance')
+├── statut          ENUM('Planifié','Confirmé','Annulé','Reporté')
+│                        DEFAULT 'Planifié'
+├── commentaire     TEXT                     -- motif annulation/report
+├── cree_par        FK → utilisateurs(id)
+└── INDEX: (filiere_id, jour, semaine_debut), (enseignant_id, jour), (salle_id, jour)
+```
+
+#### TABLE : presences
+```sql
+presences
+├── id              UUID PRIMARY KEY
+├── edt_id          FK → emploi_du_temps(id)
+├── type_absent     ENUM('Enseignant','Etudiant')
+├── concerne_id     FK → utilisateurs(id)    -- qui est absent
+├── statut          ENUM('Présent','Absent','Retard','Excusé')
+├── date_pointage   DATE NOT NULL
+├── heure_arrivee   TIME
+├── marque_par      FK → utilisateurs(id)    -- admin scolarité
+├── justificatif_url VARCHAR(255)
+├── commentaire     TEXT
+└── UNIQUE (edt_id, concerne_id, date_pointage)
+```
+
+#### TABLE : notes
+```sql
+notes
+├── id              UUID PRIMARY KEY
+├── etudiant_id     FK → etudiants(id)
+├── ecue_id         FK → ecue(id)
+├── annee_academique_id FK → annees_academiques(id)
+├── valeur_note     DECIMAL(5,2) NOT NULL CHECK (valeur_note BETWEEN 0 AND 20)
+├── type_evaluation ENUM('Devoir Surveillé','TP','Projet','Examen Partiel',
+│                        'Examen Final','Rattrapage','Oral')
+├── coefficient_eval DECIMAL(3,2) DEFAULT 1.00  -- poids dans la moyenne ECUE
+├── statut          ENUM('Brouillon','Soumise','Validée','Contestée')
+│                        DEFAULT 'Brouillon'
+├── saisie_par      FK → utilisateurs(id)    -- enseignant ou scolarité
+├── validee_par     FK → utilisateurs(id)    -- directeur uniquement
+├── date_saisie     TIMESTAMP DEFAULT NOW()
+├── date_validation TIMESTAMP
+├── commentaire     TEXT
+└── INDEX: (etudiant_id, ecue_id), (statut), (saisie_par)
+```
+
+**Flux de vie d'une note :**
+```
+Brouillon → Soumise → [Contestée ↔ Soumise] → Validée
+  (saisie)   (submit)   (si erreur signalée)    (directeur)
+```
+
+#### TABLE : bulletins
+```sql
+bulletins
+├── id              UUID PRIMARY KEY
+├── etudiant_id     FK → etudiants(id)
+├── annee_academique_id FK → annees_academiques(id)
+├── semestre        INT CHECK (semestre IN (1,2))
+├── moyenne_s1      DECIMAL(5,2)             -- moyenne pondérée semestre 1
+├── moyenne_s2      DECIMAL(5,2)             -- moyenne pondérée semestre 2
+├── moyenne_annuelle DECIMAL(5,2)
+├── total_credits_valides INT
+├── rang            INT
+├── effectif_filiere INT
+├── mention         ENUM('Très Bien','Bien','Assez Bien','Passable','Ajourné')
+├── decision        ENUM('Admis(e)','Ajourné(e)','Exclu(e)','Admis(e) avec dettes')
+├── chemin_pdf      VARCHAR(255)
+├── genere_par      FK → utilisateurs(id)
+├── date_generation TIMESTAMP DEFAULT NOW()
+├── est_publie      BOOLEAN DEFAULT FALSE    -- visible étudiant/parent seulement si TRUE
+└── UNIQUE (etudiant_id, annee_academique_id, semestre)
+```
+
+#### TABLE : pv_jury
+```sql
+pv_jury
+├── id              UUID PRIMARY KEY
+├── filiere_id      FK → filieres(id)
+├── annee_academique_id FK → annees_academiques(id)
+├── semestre        INT
+├── date_jury       DATE
+├── president_jury  VARCHAR(200)
+├── membres_jury    JSONB                    -- liste des membres
+├── contenu         JSONB                    -- données structurées du PV
+├── chemin_pdf      VARCHAR(255)
+├── statut          ENUM('Brouillon','Signé','Archivé') DEFAULT 'Brouillon'
+├── genere_par      FK → utilisateurs(id)
+└── date_generation TIMESTAMP DEFAULT NOW()
+```
+
+#### TABLE : frais_scolarite
+```sql
+frais_scolarite
+├── id              UUID PRIMARY KEY
+├── etudiant_id     FK → etudiants(id)
+├── annee_academique_id FK → annees_academiques(id)
+├── montant_total   DECIMAL(12,2) NOT NULL   -- en FCFA
+├── montant_paye    DECIMAL(12,2) DEFAULT 0
+├── montant_restant DECIMAL(12,2) GENERATED ALWAYS AS (montant_total - montant_paye)
+├── statut          ENUM('Non payé','Partiel','Soldé','Exonéré') DEFAULT 'Non payé'
+├── date_echeance   DATE
+└── observations    TEXT
+```
+
+#### TABLE : paiements
+```sql
+paiements
+├── id              UUID PRIMARY KEY
+├── frais_id        FK → frais_scolarite(id)
+├── montant         DECIMAL(12,2) NOT NULL
+├── mode_paiement   ENUM('Espèces','Wave','Orange Money','MTN Money',
+│                        'Virement','Chèque')
+├── reference_transaction VARCHAR(100)       -- numéro de reçu externe
+├── reçu_genere     BOOLEAN DEFAULT FALSE
+├── reçu_url        VARCHAR(255)
+├── encaisse_par    FK → utilisateurs(id)   -- agent comptabilité
+└── date_paiement   TIMESTAMP DEFAULT NOW()
+```
+
+#### TABLE : salles
+```sql
+salles
+├── id              UUID PRIMARY KEY
+├── campus_id       FK → campus(id)
+├── code_salle      VARCHAR(20)              -- "A101", "LABO-INFO-2"
+├── nom_salle       VARCHAR(100)
+├── batiment        VARCHAR(50)
+├── capacite        INT NOT NULL CHECK (capacite > 0)
+├── type_salle      ENUM('Amphithéâtre','Salle TD','Laboratoire Info',
+│                        'Labo Sciences','Salle Examen','Salle Conf.')
+├── equipements     JSONB                    -- {"videoprojecteur": true, "AC": true, ...}
+├── est_active      BOOLEAN DEFAULT TRUE
+└── UNIQUE (campus_id, code_salle)
+```
+
+#### TABLE : bibliotheque_documents
+```sql
+bibliotheque_documents
+├── id              UUID PRIMARY KEY
+├── filiere_id      FK → filieres(id)        -- peut être NULL = tous campus
+├── ecue_id         FK → ecue(id)            -- peut être NULL = général filière
+├── campus_id       FK → campus(id)
+├── titre           VARCHAR(255) NOT NULL
+├── description     TEXT
+├── type_doc        ENUM('Sujet Devoir','Sujet Examen','Corrigé Devoir',
+│                        'Corrigé Examen','TD','TP','Polycopié','Autre')
+├── annee           INT                      -- année de l'épreuve
+├── semestre        INT
+├── acces           ENUM('Gratuit','Payant') DEFAULT 'Gratuit'
+├── prix            DECIMAL(10,2) DEFAULT 0  -- 0 si gratuit, en FCFA
+├── fichier_url     VARCHAR(255) NOT NULL    -- stocké sur MinIO
+├── miniature_url   VARCHAR(255)             -- aperçu première page
+├── nb_pages        INT
+├── nb_telechargements INT DEFAULT 0
+├── nb_ventes       INT DEFAULT 0
+├── est_publie      BOOLEAN DEFAULT FALSE
+├── publie_par      FK → utilisateurs(id)
+├── approuve_par    FK → utilisateurs(id)   -- directeur
+└── date_publication TIMESTAMP
+```
+
+#### TABLE : achats_documents
+```sql
+achats_documents
+├── id              UUID PRIMARY KEY
+├── document_id     FK → bibliotheque_documents(id)
+├── etudiant_id     FK → etudiants(id)
+├── paiement_id     FK → paiements(id)
+├── date_achat      TIMESTAMP DEFAULT NOW()
+└── UNIQUE (document_id, etudiant_id)
+```
+
+#### TABLE : messages
+```sql
+messages
+├── id              UUID PRIMARY KEY
+├── expediteur_id   FK → utilisateurs(id)
+├── destinataire_id FK → utilisateurs(id)   -- NULL si broadcast
+├── groupe_cible    ENUM('Tous','Filière','Enseignants','Parents',NULL)
+├── filiere_cible   FK → filieres(id)       -- si groupe_cible = 'Filière'
+├── objet           VARCHAR(200)
+├── contenu         TEXT NOT NULL
+├── type_message    ENUM('Personnel','Annonce','Notification Système','Alerte')
+├── priorite        ENUM('Basse','Normale','Haute','Urgente') DEFAULT 'Normale'
+├── est_lu          BOOLEAN DEFAULT FALSE
+├── date_lecture    TIMESTAMP
+├── pieces_jointes  JSONB                   -- URLs des PJ
+└── date_envoi      TIMESTAMP DEFAULT NOW()
+```
+
+#### TABLE : notifications
+```sql
+notifications
+├── id              UUID PRIMARY KEY
+├── utilisateur_id  FK → utilisateurs(id)
+├── type            ENUM('note_publiée','paiement_reçu','EDT_modifié',
+│                        'absence_signalée','message_reçu','alerte_assiduité',
+│                        'document_disponible','bulletin_publié')
+├── titre           VARCHAR(200)
+├── contenu         TEXT
+├── lien            VARCHAR(255)            -- URL deep link vers la ressource
+├── est_lue         BOOLEAN DEFAULT FALSE
+├── date_creation   TIMESTAMP DEFAULT NOW()
+└── INDEX: (utilisateur_id, est_lue)
+```
+
+#### TABLE : disponibilites_enseignants
+```sql
+disponibilites_enseignants
+├── id              UUID PRIMARY KEY
+├── enseignant_id   FK → enseignants(id)
+├── jour            ENUM('Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi')
+├── heure_debut     TIME NOT NULL
+├── heure_fin       TIME NOT NULL
+├── type            ENUM('Disponible','Indisponible','Préféré')
+├── motif           TEXT                    -- ex: "Autre cours à l'INPHB"
+├── recurrent       BOOLEAN DEFAULT TRUE    -- toutes les semaines
+├── semaine_specifique INT                 -- si non récurrent
+└── INDEX: (enseignant_id, jour)
+```
+
+#### TABLE : audit_log
+```sql
+audit_log
+├── id              UUID PRIMARY KEY
+├── utilisateur_id  FK → utilisateurs(id)
+├── action          VARCHAR(100)            -- 'CREATE_NOTE','VALIDATE_NOTE','LOGIN'...
+├── table_cible     VARCHAR(50)
+├── enregistrement_id VARCHAR(50)          -- UUID de la ligne modifiée
+├── valeurs_avant   JSONB                   -- état avant modification
+├── valeurs_apres   JSONB                   -- état après modification
+├── ip_address      INET
+├── user_agent      TEXT
+├── campus_id       FK → campus(id)
+└── date_action     TIMESTAMP DEFAULT NOW()
+```
+
+---
+
+## 7. FONCTIONNALITÉS PAR ACTEUR — SPÉCIFICATION CHIRURGICALE
+
+> Format de chaque fonctionnalité :
+> **Qui** (acteur) · **Fait Quoi** (action) · **Comment** (mécanique) · **Pourquoi** (règle métier) · **Pour Qui** (bénéficiaire) · **Selon Quoi** (contrainte/règle)
+
+---
+
+### 7.1 SUPER ADMINISTRATEUR TECHNIQUE
+
+**Identité :** Le technicien informatique responsable de l'infrastructure UIST. Il n'est pas un acteur métier universitaire. Son accès est technique.
+
+**Principe :** Accès uniquement via interface d'administration sécurisée (non accessible depuis le portail public). Connexion 2FA obligatoire.
+
+#### F-SA-01 : Gestion des Campus
+- **Qui :** Super Admin
+- **Fait Quoi :** CRUD sur les campus (créer, modifier, activer/désactiver)
+- **Comment :** Formulaire avec tous les champs campus. Upload du logo. Affectation du directeur initial.
+- **Pourquoi :** Chaque nouveau campus UIST doit être enregistré avant toute opération
+- **Pour Qui :** Le DG et tous les acteurs du campus concerné
+- **Selon Quoi :** Un campus désactivé rend toutes ses données inaccessibles aux utilisateurs finaux mais préservées en base
+
+**Écran :** Liste des campus avec statut, directeur en poste, nombre d'étudiants actifs. Bouton "+ Nouveau Campus". Fiche détaillée campus avec onglets : Infos | Directeur | Statistiques.
+
+#### F-SA-02 : Gestion des Comptes DG et Directeurs
+- **Qui :** Super Admin
+- **Fait Quoi :** Crée les comptes DG et Directeurs d'établissement
+- **Comment :** Formulaire de création utilisateur avec rôle DG ou DIRECTEUR. Génération automatique du matricule. Envoi d'email d'activation avec mot de passe temporaire.
+- **Pourquoi :** Seul le Super Admin crée ces comptes de haut niveau pour éviter toute usurpation
+- **Pour Qui :** Les DG et directeurs concernés
+- **Selon Quoi RM-01 :** Un directeur est toujours lié à un campus unique. Le DG est lié à aucun campus spécifique.
+
+**Écran :** Tableau des comptes administrateurs (DG + Directeurs) avec filtres par rôle/campus. Bouton création. Modal de création avec sélection campus obligatoire pour DIRECTEUR.
+
+#### F-SA-03 : Configuration Système Globale
+- **Qui :** Super Admin
+- **Fait Quoi :** Configure les paramètres techniques globaux
+- **Comment :** Interface de configuration clé-valeur. Paramètres : durée de session, format matricule, politiques de mot de passe, limites upload, maintenance programmée.
+- **Pourquoi :** Centraliser la configuration technique évite les incohérences entre campus
+- **Pour Qui :** Impact sur tous les utilisateurs
+- **Selon Quoi :** Modification tracée dans audit_log. Rechargement à chaud sans redémarrage serveur.
+
+#### F-SA-04 : Monitoring et Logs
+- **Qui :** Super Admin
+- **Fait Quoi :** Consulte les logs d'audit, erreurs serveur, tentatives de connexion échouées
+- **Comment :** Dashboard technique avec graphiques : requêtes/seconde, erreurs 4xx/5xx, connexions actives, taille base de données. Tableau audit_log avec filtres avancés.
+- **Pourquoi :** Détecter les anomalies, intrusions, problèmes de performance
+- **Pour Qui :** Stabilité du système pour tous les utilisateurs
+- **Selon Quoi RM-02 :** Toute connexion échouée 5 fois consécutives depuis la même IP déclenche un blocage temporaire de 30 minutes et une alerte Super Admin.
+
+**Écran :** Dashboard technique avec 4 KPI principaux (uptime, utilisateurs actifs, erreurs/heure, taille DB). Section logs avec pagination, export CSV.
+
+#### F-SA-05 : Sauvegarde et Restauration
+- **Qui :** Super Admin
+- **Fait Quoi :** Déclenche les sauvegardes manuelles, restaure depuis un backup
+- **Comment :** Interface de gestion des snapshots avec historique, taille, date. Bouton de déclenchement backup manuel. Procédure de restauration avec confirmation double.
+- **Pourquoi :** Protection contre la perte de données
+- **Selon Quoi RM-03 :** Backup automatique quotidien configuré. Rétention 30 jours. Le Super Admin ne peut restaurer que depuis son interface dédiée avec 2FA confirmé.
+
+---
+
+### 7.2 DIRECTEUR GÉNÉRAL (DG)
+
+**Identité :** Le DG est le dirigeant de l'institution UIST dans son ensemble. Il pilote stratégiquement plusieurs campus. Son interface est orientée **tableau de bord exécutif** et **reporting multi-campus**.
+
+**Ce qu'il NE fait PAS :** Il ne gère pas les notes individuelles, ne crée pas d'EDT, ne touche pas aux dossiers étudiants. Il délègue aux directeurs de campus.
+
+**Ce qu'il FAIT :** Il voit tout, consolide, décide, télécharge les rapports, valide les filières et les grandes orientations.
+
+#### F-DG-01 : Dashboard Exécutif Multi-Campus (Page d'accueil)
+- **Qui :** DG
+- **Fait Quoi :** Consulte en un coup d'œil la santé de tous ses campus
+- **Comment :** Tableau de bord avec cartes campus, chacune affichant : effectif actif, taux de réussite semestre en cours, recettes financières du mois, nombre d'enseignants actifs, alertes critiques.
+- **Pourquoi :** Le DG doit pouvoir réagir rapidement sur n'importe quel campus sans navigation complexe
+- **Pour Qui :** Le DG lui-même, pour sa prise de décision
+- **Selon Quoi RM-04 :** Les données sont rafraîchies toutes les 5 minutes via WebSocket. Les alertes critiques (taux d'absence > 30%, impayés > 40%) sont notifiées en temps réel.
+
+**Écran DG :**
+```
+┌─────────────────────────────────────────────────────┐
+│  Bonjour, DG [Nom]. Lundi 10 Avril 2026             │
+│  3 campus actifs · 1 247 étudiants · 2 alertes 🔴   │
+│                                                       │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ │
+│  │ UIST Abidjan │ │ UIST Yamousso│ │ UIST Bouaké  │ │
+│  │  847 étud.   │ │   280 étud.  │ │   120 étud.  │ │
+│  │  Réussite 72%│ │  Réussite 68%│ │  Réussite 81%│ │
+│  │  Finances ✅  │ │  Finances ⚠️ │ │  Finances ✅  │ │
+│  │  [Voir →]    │ │  [Voir →]    │ │  [Voir →]    │ │
+│  └──────────────┘ └──────────────┘ └──────────────┘ │
+│                                                       │
+│  Alertes prioritaires :                               │
+│  🔴 UIST Yamoussoukro : 42% d'impayés S2 2024-2025  │
+│  🟡 UIST Abidjan : 3 enseignants sans EDT validé     │
+└─────────────────────────────────────────────────────┘
+```
+
+#### F-DG-02 : Vue Détaillée par Campus
+- **Qui :** DG
+- **Fait Quoi :** Accède au détail d'un campus spécifique (lecture seule)
+- **Comment :** En cliquant sur un campus, le DG accède à une vue avec onglets : Académique | Financier | Enseignants | Étudiants | Alertes. Toutes les données du directeur de ce campus mais en **lecture seule**.
+- **Pourquoi :** Le DG supervise sans interférer dans les opérations quotidiennes
+- **Pour Qui :** Transparence vers le DG, responsabilité des directeurs
+- **Selon Quoi RM-05 :** Le DG peut annoter une observation visible du directeur concerné, mais ne peut pas modifier directement les données.
+
+#### F-DG-03 : CRUD Filières (Multi-Campus)
+- **Qui :** DG
+- **Fait Quoi :** Crée, modifie, désactive les filières pour n'importe quel campus
+- **Comment :** Formulaire filière complet. Possibilité de dupliquer une filière d'un campus vers un autre. Désactivation douce : les étudiants inscrits restent, plus de nouvelles inscriptions.
+- **Pourquoi :** Les filières sont une décision stratégique institutionnelle, pas opérationnelle
+- **Pour Qui :** Tous les campus, les futurs étudiants
+- **Selon Quoi RM-06 :** Impossible de supprimer une filière ayant des étudiants inscrits actifs. La désactivation est la seule option. Notification automatique au directeur du campus concerné.
+
+**Écran :** Tableau de toutes les filières groupées par campus. Filtres : campus, grade (LICENCE/BTS), statut. Bouton "+ Nouvelle Filière". Modal création avec sélection campus.
+
+#### F-DG-04 : Rapports Consolidés (Téléchargeables)
+- **Qui :** DG
+- **Fait Quoi :** Génère et télécharge des rapports consolidés sur tous les campus
+- **Comment :** Sélecteur de rapport, période, campus (un ou tous). Génération PDF ou Excel. Historique des rapports générés.
+- **Pourquoi :** Décision stratégique, présentation au conseil d'administration, reporting institutionnel
+- **Pour Qui :** Le DG, le conseil d'administration UIST
+
+**Rapports disponibles :**
+
+| Rapport | Contenu | Format |
+|---|---|---|
+| Rapport de Réussite | Taux de réussite par filière, niveau, campus, semestre | PDF + Excel |
+| Rapport Financier | Recettes attendues vs perçues par campus, taux de recouvrement | PDF + Excel |
+| Rapport Effectifs | Inscriptions par filière/niveau/campus, évolution N-1 | PDF + Excel |
+| Rapport Enseignants | Nombre enseignants, heures effectuées vs prévues | PDF |
+| Rapport Assiduité | Taux de présence moyen par filière et campus | PDF + Excel |
+| Rapport Bibliothèque | Documents publiés, téléchargements, revenus documents payants | Excel |
+| Rapport Jury | Synthèse des décisions de jury par campus et filière | PDF |
+
+#### F-DG-05 : Gestion des Directeurs de Campus
+- **Qui :** DG
+- **Fait Quoi :** Consulte et peut demander au Super Admin de créer/remplacer un directeur
+- **Comment :** Vue des directeurs par campus avec date de prise de poste, historique. Bouton "Signaler un changement de direction" qui notifie le Super Admin.
+- **Pourquoi RM-07 :** La création du compte directeur reste chez le Super Admin, mais le DG initie la demande et l'approuve.
+
+#### F-DG-06 : Notifications et Alertes Temps Réel
+- **Qui :** DG
+- **Fait Quoi :** Reçoit des alertes automatiques sur les événements critiques de tous les campus
+- **Comment :** Centre de notifications avec badge rouge sur icône cloche. Alertes critiques : popup overlay. Alertes normales : liste dans panel.
+- **Selon Quoi RM-08 :** Alertes déclenchées automatiquement si : taux d'impayés > 35% d'un campus, taux d'absence enseignant > 20%, absence de résultats jury après J+30 de la fin de semestre.
+
+---
+
+### 7.3 DIRECTEUR D'ÉTABLISSEMENT
+
+**Identité :** Autorité pédagogique et administrative suprême de son campus. Il supervise toutes les opérations, valide les actes académiques critiques (notes, PV), crée l'emploi du temps et arbitre les conflits.
+
+**Principe :** Le directeur hérite de toutes les capacités des pôles administratifs de son campus + ses propres capacités de validation et d'arbitrage.
+
+#### F-DIR-01 : Dashboard de Pilotage Campus
+- **Qui :** Directeur
+- **Fait Quoi :** Voit en temps réel l'état de son campus
+- **Comment :** Tableau de bord avec KPI : notes en attente de validation (compteur urgent), conflits EDT actifs, étudiants en alerte assiduité, recettes du jour, messages non lus.
+- **Pourquoi :** Le directeur doit traiter les blocages sans délai (une note non validée bloque l'étudiant)
+- **Selon Quoi RM-09 :** Notes soumises depuis plus de 48h sans validation → alerte rouge sur le dashboard.
+
+**KPI Dashboard Directeur :**
+```
+┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐
+│   Notes   │ │  Conflits │ │  Alertes  │ │ Recettes  │
+│ en attente│ │    EDT    │ │ Assiduité │ │   du Mois │
+│    [23] 🔴│ │    [2] 🟡 │ │   [8] 🟡  │ │ 4.2M FCFA │
+└───────────┘ └───────────┘ └───────────┘ └───────────┘
+```
+
+#### F-DIR-02 : CRUD Filières (Campus)
+- **Qui :** Directeur
+- **Fait Quoi :** Crée et modifie les filières de son campus (dans le périmètre défini par le DG)
+- **Comment :** Formulaire avec tous les champs filière. Peut assigner un enseignant responsable de filière. Peut définir l'effectif maximum par niveau.
+- **Pourquoi :** Le directeur adapte les filières aux réalités locales de son campus
+- **Selon Quoi RM-10 :** Un directeur ne peut créer une filière que dans les grades autorisés pour son campus (défini par le DG lors de la création du campus).
+
+**Écran :** Liste des filières avec accordéon montrant les UE et ECUE de chaque filière. Bouton CRUD sur chaque élément. Indicateur coloré : filière active (vert), désactivée (gris), en cours de modification (orange).
+
+#### F-DIR-03 : Création et Gestion de l'Emploi du Temps
+- **Qui :** Directeur (ou Scolarité déléguée)
+- **Fait Quoi :** Planifie les créneaux de cours pour chaque filière/niveau
+- **Comment :** 
+  1. Vue calendrier hebdomadaire par filière. Drag & drop d'un créneau dans une case horaire.
+  2. Modal de création : sélection ECUE → sélection enseignant (filtré sur spécialité et disponibilités) → sélection salle (filtrée sur capacité et disponibilité) → confirmation.
+  3. Vérification automatique RG01 (anti-conflit) à la soumission.
+  4. Si conflit détecté : affichage du conflit exact avec options de résolution.
+  5. Si résolution forcée : champ justification obligatoire, tracé dans audit_log.
+- **Pourquoi :** L'EDT est la colonne vertébrale opérationnelle de l'université. Un conflit bloque réellement deux filières ou un enseignant.
+- **Selon Quoi RM-11 (RG01) :** Un créneau ne peut être créé si : (a) l'enseignant a un autre cours au même moment, (b) la salle est déjà occupée, (c) la filière a déjà un cours sur ce créneau.
+- **Selon Quoi RM-12 (RG02) :** Si le créneau chevauche une indisponibilité déclarée par l'enseignant, une alerte (non bloquante) est affichée au directeur.
+
+**Écran EDT :**
+```
+Vue Semaine - Filière DAWM L1 - Semaine 15 (07-12 Avr 2026)
+[◄ Sem.14]  [Sem.16 ►]  [Toutes filières ▼]  [+ Nouveau créneau]
+
+          Lundi      Mardi     Mercredi    Jeudi     Vendredi
+08h-10h  [MAT1211]                        [AEI1221]
+          DR BAMBA               (libre)   DR DIOP
+          Salle A2                         Amphi B
+10h-12h             [EIT1251]             [MAT1212]
+                    M.ZOKORA              DR DIOP
+                    Labo Info             Salle A1
+14h-16h  [Exam ⚠️]                        [STAT123]
+          ...
+```
+
+#### F-DIR-04 : Validation des Notes
+- **Qui :** Directeur
+- **Fait Quoi :** Valide les notes soumises par les enseignants ou la scolarité
+- **Comment :** Liste paginée des notes au statut "Soumise" avec filtre par ECUE, filière, enseignant. Actions : Valider (unitaire ou en lot), Rejeter avec motif. Une note validée ne peut être modifiée que par le directeur avec justification.
+- **Pourquoi RM-13 :** Le directeur est le seul garant de l'intégrité des notes. Sa validation est un acte formel qui déclenche la visibilité pour l'étudiant.
+- **Pour Qui :** Les étudiants (qui ne voient que les notes validées), les parents, pour le calcul des bulletins.
+- **Selon Quoi RM-14 :** Une note validée devient immuable. Seul le directeur peut la modifier via une procédure de "correction exceptionnelle" tracée dans audit_log avec ancien et nouveau valeur.
+
+**Écran :** Tableau avec colonnes : Étudiant | Matricule | ECUE | Note | Type Éval | Saisi par | Date saisie. Checkbox multi-sélection. Boutons "Valider la sélection" et "Rejeter avec motif". Badge rouge avec compteur de notes en attente dans le menu latéral.
+
+#### F-DIR-05 : Génération des Bulletins
+- **Qui :** Directeur (ou Scolarité déléguée)
+- **Fait Quoi :** Génère les bulletins de notes PDF officiels
+- **Comment :**
+  1. Sélection filière + niveau + semestre + année académique
+  2. Vérification : toutes les notes du semestre pour cette filière sont-elles validées ?
+  3. Si non : alerte listant les ECUE sans notes validées. Blocage si notes manquantes.
+  4. Si oui : calcul automatique moyennes UE, moyenne semestrielle, rang, mention, décision.
+  5. Génération PDF par batch (un PDF par étudiant). Stockage sur MinIO.
+  6. Option : publication groupée (rend les bulletins visibles aux étudiants/parents).
+- **Pourquoi RM-06 :** Un bulletin ne peut être généré que sur des notes toutes validées. Un bulletin partiel serait une erreur académique.
+- **Selon Quoi RM-15 :** Formule moyenne semestrielle : Σ(note_ECUE × crédit_ECUE) / Σ(crédit_ECUE). Seules les notes validées sont incluses. Rang calculé sur la filière/niveau/semestre.
+
+**Écran :** Formulaire de sélection. Barre de progression pendant la génération. Tableau des bulletins générés avec aperçu, statut (brouillon/publié), boutons télécharger/publier/re-générer.
+
+#### F-DIR-06 : Génération des PV de Jury
+- **Qui :** Directeur
+- **Fait Quoi :** Génère le Procès-Verbal officiel du jury de délibération
+- **Comment :** Sélection filière + semestre. Récapitulatif auto : liste étudiants, leurs moyennes, mentions, décisions (Admis/Ajourné/Exclu). Possibilité de modifier manuellement une décision avec justification (cas de délibération). Export PDF avec en-tête institutionnel UIST + signature directeur.
+- **Pourquoi RM-16 :** Le PV est un document légal attestant des résultats académiques. Il doit être généré après délibération du jury, pas automatiquement.
+- **Selon Quoi RM-17 :** Mentions CAMES : ≥16 Très Bien, ≥14 Bien, ≥12 Assez Bien, ≥10 Passable, <10 Ajourné.
+
+#### F-DIR-07 : Gestion des Comptes (Son Campus)
+- **Qui :** Directeur
+- **Fait Quoi :** Crée et gère les comptes de tous les acteurs de son campus (Scolarité, Comptabilité, RH, Enseignants, Étudiants, Parents)
+- **Comment :** Interface CRUD utilisateurs avec filtre par rôle. Formulaire de création avec génération automatique du matricule. Réinitialisation de mot de passe. Activation/désactivation de compte.
+- **Pourquoi RM-04 RM-01 :** Le directeur crée uniquement des rôles inférieurs ou égaux à son niveau sur son campus. Il ne peut pas créer d'autres directeurs ni de DG.
+
+#### F-DIR-08 : Tableau de Bord Académique (Analyses)
+- **Qui :** Directeur
+- **Fait Quoi :** Analyse les performances académiques de son campus
+- **Comment :** Graphiques : taux de réussite par filière/niveau, évolution des moyennes sur les semestres, comparaison filières, étudiants en difficulté (< 10 de moyenne).
+- **Pourquoi :** Aide à la décision pédagogique : renforcement, soutien, restructuration
+- **Selon Quoi RM-18 :** Un étudiant avec moins de 10 de moyenne pendant 2 semestres consécutifs est automatiquement marqué "En difficulté" et génère une alerte directeur + notification parent.
+
+---
+
+### 7.4 ADMINISTRATION — SCOLARITÉ
+
+**Identité :** Pôle gérant le cycle de vie académique de l'étudiant : inscription, notes quotidiennes, assiduité, communication.
+
+**Périmètre :** Son campus uniquement. Ne valide pas les notes (rôle directeur). Ne touche pas aux finances.
+
+#### F-SCO-01 : Inscription et Ré-inscription des Étudiants
+- **Qui :** Scolarité
+- **Fait Quoi :** Inscrit un nouvel étudiant ou ré-inscrit un étudiant existant pour une nouvelle année
+- **Comment :**
+  1. **Nouvel étudiant :** Formulaire complet (identité, bac, filière, niveau). Génération automatique du matricule. Création compte utilisateur + profil étudiant + dossier frais de scolarité. Photo de profil upload. Email d'activation envoyé.
+  2. **Ré-inscription :** Recherche par matricule. Sélection nouvelle année académique. Confirmation niveau (passage ou redoublement). Création nouveau dossier frais.
+- **Pourquoi RM-19 :** Un étudiant ne peut avoir qu'une seule inscription active par année académique dans une filière. La ré-inscription valide le passage au niveau supérieur ou le redoublement.
+- **Selon Quoi RM-20 :** Un redoublant conserve ses notes validées des ECUE avec note ≥ 10 (dettes pédagogiques). Les ECUE < 10 sont à repasser.
+
+**Écran :** Formulaire en étapes (stepper) : 1-Identité → 2-Diplôme → 3-Filière/Niveau → 4-Documents → 5-Confirmation. Affiche le matricule généré à l'étape 5.
+
+#### F-SCO-02 : Gestion du Dossier Étudiant
+- **Qui :** Scolarité
+- **Fait Quoi :** Consulte et met à jour le dossier complet d'un étudiant
+- **Comment :** Recherche par matricule ou nom. Fiche étudiant avec onglets : Identité | Notes | Bulletins | Assiduité | Paiements (lecture seule) | Parents liés | Documents.
+- **Pourquoi :** Accès rapide au dossier complet pour traiter les demandes étudiantes
+- **Selon Quoi RM-21 :** La scolarité peut modifier : adresse, téléphone, photo. Elle ne peut pas modifier les notes validées, le matricule, la date de naissance.
+
+#### F-SCO-03 : Saisie et Import de Notes
+- **Qui :** Scolarité (pour les cours sans enseignant attitré ou sur délégation)
+- **Fait Quoi :** Saisit des notes manuellement ou importe depuis Excel
+- **Comment :**
+  - **Saisie manuelle :** Sélection ECUE → liste étudiants → saisie note + type évaluation. Soumission au directeur.
+  - **Import Excel :** Upload fichier. Template téléchargeable avec colonnes : Matricule | Code_ECUE | Note | Type_Évaluation. Validation ligne par ligne. Rapport d'import : lignes importées, lignes rejetées (avec motif).
+- **Pourquoi RM-22 :** La scolarité peut saisir des notes, mais seulement les SOUMETTRE (pas les valider). La validation reste exclusive au directeur.
+- **Selon Quoi RM-23 :** Note entre 0.00 et 20.00. Vérification que l'étudiant est bien inscrit dans la filière de l'ECUE concerné.
+
+**Template Excel obligatoire :**
+```
+Colonne A : Matricule (ex: KA-2024-DAWM-0023)
+Colonne B : Code_ECUE (ex: MAT1211)
+Colonne C : Note (ex: 14.50)
+Colonne D : Type_Evaluation (ex: Examen Final)
+Colonne E : Commentaire (optionnel)
+```
+
+#### F-SCO-04 : Gestion de l'Emploi du Temps (Délégation)
+- **Qui :** Scolarité (sur délégation du directeur)
+- **Fait Quoi :** Crée et modifie des créneaux EDT
+- **Comment :** Même interface que le directeur mais avec restrictions : ne peut pas forcer la résolution d'un conflit (bloqué, doit escalader au directeur).
+- **Pourquoi RM-24 :** Le directeur peut déléguer la planification quotidienne mais garde le pouvoir d'arbitrage sur les conflits.
+
+#### F-SCO-05 : Pointage des Présences
+- **Qui :** Scolarité
+- **Fait Quoi :** Enregistre la présence/absence de chaque enseignant et signale les absences d'étudiants par cours
+- **Comment :** Vue du jour : liste des créneaux EDT du jour. Pour chaque créneau : marquer l'enseignant (Présent/Absent/Retard). Si enseignant absent : champ motif + notification automatique aux étudiants concernés.
+- **Pourquoi RM-25 :** Le suivi de présence des enseignants est lié à leur paiement (vacataires) et à la planification des rattrapages.
+
+#### F-SCO-06 : Liaison Parents-Étudiants
+- **Qui :** Scolarité
+- **Fait Quoi :** Lie un compte parent à un ou plusieurs étudiants
+- **Comment :** Recherche parent (par matricule) + recherche étudiant. Sélection du lien de parenté (Père/Mère/Tuteur/Autre). Confirmation. Un parent peut voir tous ses enfants liés.
+- **Pourquoi RM-26 :** La liaison est vérifiée à chaque accès parent aux données enfant. Sans liaison, le parent ne voit rien.
+
+#### F-SCO-07 : Messagerie et Annonces
+- **Qui :** Scolarité
+- **Fait Quoi :** Envoie des messages et annonces aux étudiants, parents, enseignants
+- **Comment :** Rédaction message. Sélection destinataires : individual, groupe filière, tous étudiants campus, tous enseignants. Pièces jointes possibles. Notification en temps réel + email si activé.
+- **Pourquoi RM-27 :** La scolarité est le point de contact principal pour la vie académique. Elle doit pouvoir communiquer rapidement les changements (annulation cours, report examen).
+
+---
+
+### 7.5 ADMINISTRATION — COMPTABILITÉ
+
+**Identité :** Gère toutes les transactions financières : encaissement des frais, émission de reçus, rapports financiers, documents payants de la bibliothèque.
+
+**Périmètre :** Son campus uniquement. N'accède pas aux notes ni à l'EDT.
+
+#### F-CPT-01 : Enregistrement des Paiements
+- **Qui :** Comptabilité
+- **Fait Quoi :** Enregistre un paiement de frais de scolarité
+- **Comment :** Recherche étudiant par matricule. Affiche son dossier financier (montant total, déjà payé, restant). Saisie : montant perçu, mode de paiement, référence de transaction. Génération automatique du reçu PDF numéroté.
+- **Pourquoi RM-28 :** Chaque paiement doit avoir un reçu officiel. Le reçu est généré à l'enregistrement et ne peut pas être modifié après (seule annulation possible avec trace).
+- **Selon Quoi RM-29 :** Les modes de paiement mobile money (Wave, Orange Money, MTN) nécessitent une référence de transaction obligatoire pour traçabilité.
+
+**Écran :** Formulaire de saisie rapide avec autocomplétion matricule. Affiche solde dû en gros. Simulation du solde après paiement avant validation. Bouton "Enregistrer et Imprimer Reçu".
+
+#### F-CPT-02 : Tableau de Bord Financier
+- **Qui :** Comptabilité
+- **Fait Quoi :** Suit les recettes et les impayés en temps réel
+- **Comment :** KPI : Recettes du jour / semaine / mois. Taux de recouvrement (%). Liste des étudiants avec solde impayé > 0 triée par montant décroissant. Alertes : étudiants avec examen imminent et solde non soldé.
+- **Pourquoi RM-30 :** La scolarité peut être alertée si un étudiant avec impayé tente de s'inscrire aux examens (politique institutionnelle paramétrable).
+
+#### F-CPT-03 : Configuration des Frais de Scolarité
+- **Qui :** Comptabilité (validé par Directeur)
+- **Fait Quoi :** Définit les montants de scolarité par filière, niveau, année académique
+- **Comment :** Grille tarifaire par filière/niveau/année. Possibilité d'exonération individuelle avec motif. Échéancier de paiement (tranches).
+- **Pourquoi RM-31 :** Les frais varient par filière (BTS moins cher que Licence) et par année académique. La grille est validée par le directeur avant d'être appliquée.
+
+#### F-CPT-04 : Gestion des Ventes Bibliothèque
+- **Qui :** Comptabilité
+- **Fait Quoi :** Traite les paiements pour les documents payants de la bibliothèque
+- **Comment :** L'étudiant initie l'achat depuis son espace. Le paiement peut être cash (enregistrement manuel par comptabilité) ou mobile money (automatique). Génération d'accès au document après paiement confirmé.
+- **Pourquoi RM-32 :** Les revenus de la bibliothèque numérique sont des recettes propres de l'établissement.
+
+#### F-CPT-05 : Rapports Financiers (Export)
+- **Qui :** Comptabilité
+- **Fait Quoi :** Génère les états financiers
+- **Comment :** Rapports : journal des recettes (liste tous paiements), état de recouvrement (par filière), tableau des impayés, rapport mensuel/annuel.
+- **Export :** PDF (pour impression officielle) + Excel (pour traitement)
+- **Selon Quoi RM-33 :** Les rapports financiers sont accessibles en lecture au directeur du campus et au DG.
+
+---
+
+### 7.6 ADMINISTRATION — RESSOURCES HUMAINES (RH)
+
+**Identité :** Gère le personnel : enseignants et staff administratif. Suivi des contrats, heures, et préparation de la paie.
+
+#### F-RH-01 : Gestion des Enseignants
+- **Qui :** RH
+- **Fait Quoi :** CRUD sur les profils enseignants
+- **Comment :** Formulaire complet : identité, grade académique, spécialité, type de contrat, quota horaire, informations bancaires (pour virements). Upload des documents contractuels.
+- **Pourquoi RM-34 :** Seul le RH gère les données contractuelles des enseignants. La scolarité voit uniquement le nom et la spécialité (pour l'EDT).
+
+#### F-RH-02 : Suivi des Heures et Préparation de Paie
+- **Qui :** RH
+- **Fait Quoi :** Calcule les heures effectuées par chaque enseignant pour la paie
+- **Comment :** Agrégation automatique depuis la table emploi_du_temps (créneaux confirmés + présences marquées). Tableau enseignant : heures prévues vs effectuées vs restantes. Export de la feuille de paie mensuelle.
+- **Pourquoi RM-35 :** Pour les vacataires, la rémunération est à l'heure effectuée. Pour les permanents, le suivi confirme le service fait.
+- **Selon Quoi RM-36 :** Un enseignant absent sans justificatif sur un créneau planifié voit cette heure déduite de son compteur heures effectuées.
+
+---
+
+### 7.7 ENSEIGNANT
+
+**Identité :** Acteur pédagogique terrain. Il dispense les cours, saisit les notes, déclare ses disponibilités et consulte son emploi du temps.
+
+**Ce qu'il NE fait PAS :** Accès aux données financières, aux dossiers complets étudiants, aux autres enseignants.
+
+#### F-ENS-01 : Dashboard Personnel
+- **Qui :** Enseignant
+- **Fait Quoi :** Consulte ses cours de la semaine et ses tâches en attente
+- **Comment :** Vue semaine personnelle. Compteur : notes à saisir (ECUE avec cours passés sans notes), prochains cours aujourd'hui.
+- **Écran simplifié :**
+```
+Bonjour Dr. BAMBA · Semaine 15
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Aujourd'hui : MAT1211 - Salle A2 - 08h00
+Demain      : MAT1212 - Salle A1 - 10h00
+
+Notes à saisir (2) :
+→ MAT1211 - DAWM L1 S2 - Devoir Surveillé [en retard]
+→ MAT1212 - SEA L1 S2 - TP
+```
+
+#### F-ENS-02 : Déclaration des Disponibilités
+- **Qui :** Enseignant
+- **Fait Quoi :** Déclare ses créneaux de disponibilité ou d'indisponibilité pour la planification
+- **Comment :** Grille hebdomadaire interactive (cases cliquables). Clic sur une case : modal avec type (Disponible/Indisponible/Préféré), motif optionnel, récurrence (hebdomadaire ou ponctuel). Sauvegarde. Le directeur/scolarité voit ces disponibilités lors de la création de l'EDT.
+- **Pourquoi RM-37 :** L'enseignant est le seul à connaître ses contraintes personnelles. Ses déclarations aident à éviter les conflits RG02, mais ne bloquent pas le directeur.
+- **Selon Quoi RM-38 :** Délai de déclaration : au plus tard 72h avant le début de la semaine concernée pour être pris en compte dans la planification.
+
+**Écran :** Grille 6 jours × 8 plages horaires (07h-19h par créneaux de 2h). Code couleur : Vert=Disponible, Rouge=Indisponible, Bleu=Préféré. Bouton "Copier semaine N vers semaine N+1" pour gagner du temps.
+
+#### F-ENS-03 : Consultation de l'EDT Personnel
+- **Qui :** Enseignant
+- **Fait Quoi :** Consulte son emploi du temps
+- **Comment :** Vue semaine personnelle avec tous ses cours. Informations par créneau : ECUE, filière, niveau, salle, type (CM/TD/TP/Examen). Navigation semaine précédente/suivante. Téléchargement PDF de l'EDT mensuel.
+- **Selon Quoi RM-39 :** Toute modification de son EDT par le directeur/scolarité déclenche une notification push + email immédiate.
+
+#### F-ENS-04 : Saisie de Notes
+- **Qui :** Enseignant
+- **Fait Quoi :** Saisit les notes pour ses cours après chaque évaluation
+- **Comment :**
+  1. Sélection ECUE (filtré sur ses cours uniquement)
+  2. Sélection type d'évaluation + date
+  3. Liste des étudiants de la filière concernée avec champ saisie note (0-20)
+  4. Possibilité de saisie partielle (sauvegarder en brouillon)
+  5. Soumission au directeur pour validation
+- **Pourquoi RM-40 :** L'enseignant ne peut saisir que pour SES cours (filtre strict sur emploi_du_temps.enseignant_id). La soumission déclenche une notification au directeur.
+- **Selon Quoi RM-41 :** Une note soumise ne peut plus être modifiée par l'enseignant. Si erreur : il doit contacter le directeur via la messagerie.
+
+**Écran :** Tableau avec colonnes : N° | Matricule | Nom | Prénom | Note /20. Calcul automatique de la moyenne de la promotion en bas de tableau. Indicateur de progression (x/y étudiants notés).
+
+#### F-ENS-05 : Historique des Notes Saisies
+- **Qui :** Enseignant
+- **Fait Quoi :** Consulte l'historique de toutes ses saisies avec statut de validation
+- **Comment :** Tableau avec filtres : ECUE, période, statut (Brouillon/Soumise/Validée). Indicateur visuel du statut de chaque série de notes.
+
+#### F-ENS-06 : Publication dans la Mini-Bibliothèque
+- **Qui :** Enseignant
+- **Fait Quoi :** Propose des documents à publier dans la bibliothèque de sa filière
+- **Comment :** Upload document (PDF). Remplissage des métadonnées : titre, ECUE concerné, type (sujet, TD, polycopié), année, accès (gratuit ou payant avec prix proposé). Soumission pour approbation par le directeur.
+- **Pourquoi RM-42 :** Un enseignant ne peut publier que des documents pour ses ECUE. L'approbation directeur évite la publication de documents erronés.
+- **Selon Quoi RM-43 :** Les documents payants proposés par les enseignants ont leur prix validé par le directeur qui peut l'ajuster. Le revenu va à l'établissement (pas à l'enseignant directement, sauf politique contraire définie par le DG).
+
+---
+
+### 7.8 ÉTUDIANT
+
+**Identité :** Bénéficiaire final du système académique. Son espace est un portail personnel de consultation et d'accès à la bibliothèque de sa filière.
+
+**Philosophie UI :** Interface claire, épurée, mobile-first. L'étudiant ivoirien accède souvent depuis son smartphone.
+
+#### F-ETU-01 : Dashboard Étudiant (Accueil)
+- **Qui :** Étudiant
+- **Fait Quoi :** Voit d'un coup d'œil sa situation académique et son prochain cours
+- **Comment :** Widget "Prochain cours" avec compte à rebours. Moyenne générale (calculée en temps réel). Dernier bulletin disponible. Nouvelles de sa filière. Solde impayé (si > 0 : alerte visible).
+- **Selon Quoi RM-44 :** L'étudiant ne voit que ses propres données. Zéro accès aux données d'autres étudiants.
+
+**Écran :**
+```
+Bonjour Adjoua ✨   Vendredi 10 Avr 2026
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Prochain cours : dans 1h45
+  MAT1211 · Salle A2 · DR BAMBA
+
+Moyenne S2 : 13.4 / 20 · Bien ✓
+Rang : 12ème / 47 étudiants
+
+[Mes Notes] [Mon EDT] [Bibliothèque] [Mes Paiements]
+```
+
+#### F-ETU-02 : Consultation des Notes
+- **Qui :** Étudiant
+- **Fait Quoi :** Consulte ses notes validées par ECUE et par semestre
+- **Comment :** Tableau organisé par semestre → UE → ECUE. Pour chaque ECUE : note obtenue, type d'évaluation, date, statut (validée uniquement visible). Calcul automatique de la moyenne UE et semestrielle. Mention estimée.
+- **Pourquoi RM-13 appliquée :** L'étudiant ne voit que les notes validées par le directeur. Les notes en brouillon ou soumises sont invisibles.
+- **Selon Quoi RM-45 :** Si une note est contestée par l'étudiant (bouton "Contester"), une notification est envoyée à la scolarité avec le motif. L'étudiant ne peut pas contester une note plus de 15 jours après sa validation.
+
+#### F-ETU-03 : Emploi du Temps de sa Filière
+- **Qui :** Étudiant
+- **Fait Quoi :** Consulte l'EDT de sa filière/niveau pour la semaine en cours et les suivantes
+- **Comment :** Vue semaine avec créneaux. Informations : ECUE, enseignant, salle, type. Navigation semaine. Bouton "Ajouter à mon calendrier" (export .ics compatible Google Calendar, Apple Calendar). Vue liste triée par jour/heure.
+- **Selon Quoi RM-46 :** L'EDT affiché est celui de la filière/niveau de l'étudiant, en temps réel. Toute modification déclenche une notification push.
+
+#### F-ETU-04 : Consultation des Bulletins
+- **Qui :** Étudiant
+- **Fait Quoi :** Télécharge ses bulletins de notes officiels
+- **Comment :** Liste des bulletins disponibles par année/semestre. Téléchargement PDF. Statut : "Disponible" (publié par directeur) ou "En préparation".
+- **Selon Quoi RM-47 :** Un bulletin n'est visible que si est_publie = TRUE. La génération par le directeur ne suffit pas, il faut la publication.
+
+#### F-ETU-05 : Profil Personnel
+- **Qui :** Étudiant
+- **Fait Quoi :** Consulte et modifie les informations modifiables de son profil
+- **Comment :** Vue profil avec sections : Identité (lecture seule), Coordonnées (modifiable : adresse, téléphone), Mot de passe (modifiable avec ancien requis), Photo de profil (upload).
+- **Selon Quoi RM-48 :** L'étudiant ne peut pas modifier : matricule, nom, prénom, date de naissance, filière. Ces données sont gérées par la scolarité.
+
+#### F-ETU-06 : Suivi des Paiements
+- **Qui :** Étudiant
+- **Fait Quoi :** Consulte son historique de paiements et son solde restant
+- **Comment :** Tableau des paiements avec date, montant, mode, numéro de reçu. Solde global : montant total / payé / restant. Téléchargement des reçus individuels.
+- **Selon Quoi RM-49 :** L'étudiant ne peut pas initier un paiement depuis la plateforme (pas de paiement en ligne intégré en V1). Il paie en caisse et consulte la confirmation.
+
+---
+
+### 7.9 PARENT/TUTEUR
+
+**Identité :** Tuteur légal d'un ou plusieurs étudiants UIST. Son interface lui permet de suivre la progression académique de ses enfants sans intervention dans le système.
+
+**Philosophie :** Interface ultra-simple, accessible même avec peu de maîtrise du numérique. Mobile-first prioritaire.
+
+#### F-PAR-01 : Sélection de l'Enfant (Si Plusieurs)
+- **Qui :** Parent
+- **Fait Quoi :** Choisit quel enfant consulter
+- **Comment :** Écran d'accueil avec cartes enfant : photo, nom, filière, niveau. Clic pour accéder au tableau de bord de cet enfant. Navigation avec bouton retour pour changer d'enfant.
+- **Selon Quoi RM-26 :** La liste des enfants visibles est strictement définie par les liaisons validées par la scolarité. Un parent ne peut pas "chercher" un étudiant.
+
+#### F-PAR-02 : Dashboard de Suivi (Par Enfant)
+- **Qui :** Parent
+- **Fait Quoi :** Voit la situation académique et financière de son enfant
+- **Comment :** Vue synthétique : moyenne actuelle, rang, dernier cours, prochains cours, solde impayé (si > 0 : alerte urgente rouge), dernière note publiée, absences récentes.
+- **Selon Quoi RM-50 :** Le parent voit exactement les mêmes informations que l'étudiant + le solde financier (qui n'est pas affiché à l'étudiant pour ne pas créer de pression directe).
+
+#### F-PAR-03 : Consultation des Notes de l'Enfant
+- **Qui :** Parent
+- **Fait Quoi :** Consulte les notes validées de son enfant
+- **Comment :** Même vue que l'étudiant (lecture seule). Organisation par semestre/UE/ECUE.
+
+#### F-PAR-04 : Emploi du Temps de l'Enfant
+- **Qui :** Parent
+- **Fait Quoi :** Consulte l'EDT de la filière de son enfant
+- **Comment :** Vue semaine lisible et simple. Info par créneau : cours, salle, enseignant, heure.
+
+#### F-PAR-05 : Suivi de l'Assiduité
+- **Qui :** Parent
+- **Fait Quoi :** Voit le taux de présence de son enfant
+- **Comment :** Taux de présence global en jauge visuelle (%). Liste des absences signalées avec date et cours concerné. Alerte si taux < 75%.
+- **Selon Quoi RM-51 :** Si le taux de présence de l'enfant passe sous 75%, le parent reçoit une notification automatique. Si < 60% : notification urgente + message scolarité.
+
+#### F-PAR-06 : Notifications Temps Réel
+- **Qui :** Parent
+- **Fait Quoi :** Reçoit des notifications push sur les événements importants de son enfant
+- **Comment :** Cloche de notification dans l'interface. Notifications : nouvelle note publiée, modification EDT, absence signalée, alerte assiduité, bulletin disponible, paiement confirmé.
+- **Selon Quoi RM-52 :** Le parent peut configurer ses préférences de notification (quelles alertes activer, mode : push app uniquement ou aussi SMS).
+
+---
+
+## 8. MINI-BIBLIOTHÈQUE ACADÉMIQUE
+
+### 8.1 Concept et Justification
+
+La mini-bibliothèque est un espace numérique **par filière** permettant de centraliser les ressources pédagogiques passées (sujets d'examens, devoirs surveillés, TDs, corrigés). Elle sert deux objectifs :
+1. **Pédagogique :** Les étudiants s'entraînent sur de vrais sujets de leur filière
+2. **Financier :** Les corrigés payants génèrent des revenus propres pour l'établissement
+
+### 8.2 Types de Documents et Modèle Économique
+
+| Type | Code | Gratuit/Payant | Qui publie | Description |
+|---|---|---|---|---|
+| Sujet de Devoir | SD | **Gratuit** | Enseignant / Scolarité | Énoncé d'un devoir surveillé passé |
+| Sujet d'Examen | SE | **Gratuit** | Directeur / Scolarité | Énoncé d'examen semestriel passé |
+| Exercice Résolu | ER | Gratuit ou **Payant** | Enseignant | Exercice type avec solution détaillée |
+| Corrigé de Devoir | CD | **Payant** | Enseignant / Scolarité | Solution officielle d'un devoir passé |
+| Corrigé d'Examen | CE | **Payant** | Directeur | Solution officielle d'un examen passé |
+| Polycopié de Cours | PC | Gratuit ou Payant | Enseignant | Support de cours |
+| TP Guidé | TP | Gratuit | Enseignant | Fiche de travaux pratiques |
+
+**Politique tarifaire :** Les prix sont définis par l'administration (comptabilité/directeur). Fourchette recommandée : 500 - 3 000 FCFA par document.
+
+### 8.3 Workflow de Publication
+
+```
+Enseignant                Directeur              Étudiant
+    │                         │                      │
+    ├─ Upload document         │                      │
+    ├─ Métadonnées             │                      │
+    ├─ Prix proposé ──────────►│                      │
+    │                         ├─ Révision             │
+    │                         ├─ Ajustement prix      │
+    │                         ├─ Approbation ─────────►│ (notification)
+    │                         │                      ├─ Accès gratuit direct
+    │                         │                      │  OU
+    │                         │                      ├─ Paiement → accès
+    │                         │                      │
+```
+
+### 8.4 Fonctionnalités Bibliothèque — Détail
+
+#### F-BIB-01 : Navigation et Filtres (Étudiant)
+- **Qui :** Étudiant connecté
+- **Fait Quoi :** Parcourt la bibliothèque de sa filière
+- **Comment :** Filtres appliqués par défaut : filière de l'étudiant, tous niveaux. Filtres additionnels : ECUE, type de document, année, accès (gratuit/payant), statut (avec/sans corrigé).
+- **Pourquoi RM-53 :** L'étudiant voit par défaut sa filière uniquement. Il peut accéder à d'autres filières si le directeur l'autorise (paramètre campus).
+
+**Écran Bibliothèque :**
+```
+📚 Bibliothèque · DAWM L1 · Semestre 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Filtres : [ECUE ▼] [Type ▼] [Année ▼] [🆓/💰]
+
+┌─────────────────────────────────────────┐
+│ 📄 Examen Final MAT1211 - 2023/2024     │
+│    Calcul intégral · 6 pages · 2023     │
+│    👁 142 vues  ⬇ 89 téléch.           │
+│    [🆓 Télécharger] [💰 Corrigé 1500F] │
+└─────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ 📄 DS1 AEI1221 - 2024/2025             │
+│    Microéconomie 2 · 3 pages · 2024     │
+│    👁 67 vues  ⬇ 45 téléch.            │
+│    [🆓 Télécharger] [✅ Corrigé inclus] │
+└─────────────────────────────────────────┘
+```
+
+#### F-BIB-02 : Achat et Accès aux Documents Payants
+- **Qui :** Étudiant
+- **Fait Quoi :** Achète un document payant et y accède
+- **Comment :**
+  1. Clic sur document payant → aperçu (première page floutée)
+  2. Affichage du prix
+  3. Choix du mode de paiement : Cash (je passe en caisse) ou Mobile Money (Wave/OM/MTN)
+  4. Si cash : génération d'un bon de commande numéroté → présentation en caisse → la comptabilité confirme le paiement → accès débloqué automatiquement
+  5. Si mobile money : saisie de la référence de transaction → vérification → accès débloqué
+- **Pourquoi RM-54 :** L'accès au document est conditionné au paiement confirmé. Un achat est permanent : une fois payé, l'étudiant y accède indéfiniment.
+
+#### F-BIB-03 : Gestion des Publications (Administration/Directeur)
+- **Qui :** Directeur / Scolarité
+- **Fait Quoi :** Gère le catalogue de la bibliothèque
+- **Comment :** Tableau des documents avec statuts (En attente d'approbation / Publié / Archivé). Actions : Approuver, Modifier prix, Archiver, Supprimer. Upload direct sans passer par un enseignant.
+- **Selon Quoi RM-42 RM-43 :** L'approbation directeur est obligatoire avant publication. Un document archivé reste accessible aux étudiants qui l'ont déjà acheté.
+
+#### F-BIB-04 : Statistiques Bibliothèque
+- **Qui :** Directeur / DG
+- **Fait Quoi :** Analyse l'utilisation et les revenus de la bibliothèque
+- **Comment :** Dashboard : documents les plus téléchargés, revenus par document, revenus totaux du mois, documents les plus vendus, filières les plus actives.
+
+---
+
+## 9. DIAGRAMMES UML
+
+### 9.1 Diagramme de Cas d'Utilisation — Global
+
+```
+                    ┌──────────────────────────────────────────────────────┐
+                    │              Système UIST-2ITS                       │
+                    │                                                        │
+[Super Admin]───────┤──(Gérer Campus)                                        │
+                    │──(Gérer Comptes DG/Directeurs)                        │
+                    │──(Configurer Système)                                  │
+                    │──(Monitorer Logs)                                      │
+                    │                                                        │
+[DG]────────────────┤──(Consulter Dashboard Multi-Campus)                   │
+                    │──(Gérer Filières)                                      │
+                    │──(Télécharger Rapports Consolidés)                     │
+                    │──(Superviser Directeurs)                               │
+                    │                                                        │
+[Directeur]─────────┤──(Valider Notes)──────────────────────────────────────┤──<<inclut>>(Notifier Étudiant)
+                    │──(Gérer EDT)──────────────────────────────────────────┤──<<inclut>>(Vérifier RG01)
+                    │──(Générer Bulletins)──────────────────────────────────┤──<<inclut>>(Calculer Moyennes)
+                    │──(Générer PV Jury)                                     │
+                    │──(Gérer Comptes Campus)                                │
+                    │──(Approuver Bibliothèque)                              │
+                    │                                                        │
+[Scolarité]─────────┤──(Inscrire Étudiant)                                   │
+                    │──(Saisir Notes)                                         │
+                    │──(Créer EDT)──────────────────────────────────────────┤──<<étend>>(Arbitrage Conflit)[si conflit]
+                    │──(Pointer Présences)                                   │
+                    │──(Lier Parent-Étudiant)                                │
+                    │──(Envoyer Annonces)                                    │
+                    │                                                        │
+[Comptabilité]──────┤──(Enregistrer Paiement)──────────────────────────────┤──<<inclut>>(Générer Reçu)
+                    │──(Configurer Frais)                                    │
+                    │──(Générer Rapports Financiers)                         │
+                    │──(Traiter Ventes Bibliothèque)                         │
+                    │                                                        │
+[RH]────────────────┤──(Gérer Enseignants)                                   │
+                    │──(Suivre Heures)                                       │
+                    │──(Préparer Paie)                                       │
+                    │                                                        │
+[Enseignant]────────┤──(Déclarer Disponibilités)                             │
+                    │──(Consulter EDT Personnel)                             │
+                    │──(Saisir Notes)                                        │
+                    │──(Publier Bibliothèque)──────────────────────────────┤──<<inclut>>(Approbation Directeur)
+                    │                                                        │
+[Étudiant]──────────┤──(Consulter Notes Validées)                            │
+                    │──(Consulter EDT Filière)                               │
+                    │──(Télécharger Bulletins)                               │
+                    │──(Parcourir Bibliothèque)                              │
+                    │──(Acheter Document)──────────────────────────────────┤──<<inclut>>(Paiement Confirmé)
+                    │──(Contester Note)                                      │
+                    │                                                        │
+[Parent]────────────┤──(Suivre Enfant)                                        │
+                    │──(Consulter Notes Enfant)                              │
+                    │──(Consulter EDT Enfant)                                │
+                    │──(Voir Assiduité Enfant)                               │
+                    │──(Recevoir Notifications)                              │
+                    └──────────────────────────────────────────────────────┘
+```
+
+### 9.2 Diagramme de Classes Simplifié
+
+```
+┌─────────────────────┐         ┌─────────────────────┐
+│      Campus          │1      N│    Utilisateur       │
+│─────────────────────│────────│─────────────────────│
+│ id: UUID             │        │ id: UUID             │
+│ code: String         │        │ matricule: String    │
+│ nom: String          │        │ nom: String          │
+│ directeur_id: UUID   │        │ email: String        │
+│─────────────────────│        │ role: Enum           │
+│ getEffectif()        │        │ campus_id: UUID      │
+│ getStatistiques()    │        │─────────────────────│
+└─────────────────────┘        │ authenticate()       │
+          │                    │ generateMatricule()  │
+          │                    └─────────────────────┘
+          │                              │
+          │            ┌─────────────────┼────────────────┐
+          │            │                 │                │
+          │   ┌─────────────────┐ ┌──────────────┐ ┌────────────┐
+          │   │   Etudiant      │ │  Enseignant  │ │  Parent    │
+          │   │─────────────────│ │──────────────│ │────────────│
+          │   │ filiere_id      │ │ grade        │ │ profession │
+          │   │ niveau_actuel   │ │ specialite   │ │────────────│
+          │   │ situation       │ │ heures_serv. │ │ getEnfants()│
+          │   │─────────────────│ │──────────────│ └────────────┘
+          │   │ getMoyenne()    │ │ getCoursActuels()│      │
+          │   │ getRang()       │ └──────────────┘        │ N
+          │   │ getBulletins()  │         │               │
+          │   └─────────────────┘         │         ┌─────────────────┐
+          │           │ N                 │         │ ParenteLiaison  │
+          │           │                  │         │─────────────────│
+   ┌──────────────┐   │          ┌────────────────┐│ lien_parente    │
+   │   Filiere    │   │          │ EmploiDuTemps  ││─────────────────│
+   │──────────────│   │          │────────────────││ verifierLien()  │
+   │ code: String │   │          │ jour: Enum     │└─────────────────┘
+   │ grade: Enum  │   │          │ heure_debut    │
+   │ parcours     │   │          │ heure_fin      │
+   │──────────────│   │          │ type_creneau   │
+   │ getUEs()     │   │          │────────────────│
+   └──────────────┘   │          │ verifierConflits()│
+          │ 1         │          └────────────────┘
+          │ N         │                  │ 1
+   ┌──────────────┐   │          ┌────────────────┐
+   │     UE       │   │          │   Presences    │
+   │──────────────│   │          │────────────────│
+   │ code_ue      │   │          │ statut: Enum   │
+   │ total_credits│   │          │ date_pointage  │
+   └──────────────┘   │          └────────────────┘
+          │ 1         │
+          │ N         │
+   ┌──────────────┐   │   N   ┌────────────────────┐
+   │    ECUE      │───┘───────│       Note          │
+   │──────────────│           │────────────────────│
+   │ code_ecue    │           │ valeur_note: Dec.   │
+   │ credits: Int │           │ type_evaluation     │
+   │ heures_cm    │           │ statut: Enum        │
+   │ heures_td    │           │ validee_par: UUID   │
+   │ heures_tp    │           │────────────────────│
+   └──────────────┘           │ soumettre()         │
+                              │ valider(directeur)  │
+                              └────────────────────┘
+                                        │
+                              ┌────────────────────┐
+                              │      Bulletin       │
+                              │────────────────────│
+                              │ moyenne_generale    │
+                              │ rang: Int           │
+                              │ mention: Enum       │
+                              │ decision: Enum      │
+                              │────────────────────│
+                              │ generer()           │
+                              │ publier()           │
+                              └────────────────────┘
+```
+
+### 9.3 Diagramme de Séquence — Validation d'une Note
+
+```
+Enseignant    Système      Directeur    Étudiant    Parent
+    │              │            │           │          │
+    │─[Saisir note]►│            │           │          │
+    │              │─[Valider format]        │          │
+    │              │─[Sauv. statut=Soumise]  │          │
+    │              │─[Notifier]─►│           │          │
+    │              │            │           │          │
+    │              │    [Consulter liste notes en attente]
+    │              │◄─[Valider note]─────────            │
+    │              │─[Mettre statut=Validée]  │          │
+    │              │─[Notifier]──────────────►│          │
+    │              │─[Notifier]────────────────────────►│
+    │              │            │           │          │
+    │              │            │    [Consulter notes]   │
+    │              │◄─────────────────────── │          │
+    │              │─[Retourner notes validées]          │
+    │              │──────────────────────►│            │
+```
+
+### 9.4 Diagramme de Séquence — Création EDT avec Vérification RG01
+
+```
+Scolarité/Directeur         Système                  Enseignant
+        │                       │                         │
+        │─[Créer créneau EDT]──►│                         │
+        │  {ECUE, Ens, Salle,   │                         │
+        │   Jour, Heure, Filière}│                         │
+        │                       │─[Vérifier RG01]         │
+        │                       │  Requête anti-conflit    │
+        │                       │  (Ens/Salle/Filière)    │
+        │                       │                         │
+        │              [Si CONFLIT trouvé]                │
+        │◄──────────────[Retourner détail conflit]        │
+        │                       │                         │
+        │  [Si Directeur : forcer avec justification]     │
+        │──[Forcer + motif]────►│                         │
+        │                       │─[Sauv. malgré conflit]  │
+        │                       │─[Log audit : forçage]   │
+        │                       │                         │
+        │              [Si PAS de conflit]                │
+        │                       │─[Vérifier RG02 (dispo.)]│
+        │                       │─[Sauvegarder créneau]   │
+        │◄──────────────[Confirmation]                    │
+        │                       │─[Notifier]─────────────►│
+        │                       │  (EDT mis à jour)       │
+```
+
+### 9.5 Diagramme de Séquence — Génération de Bulletin
+
+```
+Scolarité         Système              Directeur       Étudiant    Parent
+    │                 │                    │               │          │
+    │─[Générer bullet.]►│                  │               │          │
+    │  {filière, niv, S}│                  │               │          │
+    │                 │─[Vérif. RM-06]    │               │          │
+    │                 │  Toutes notes validées ?          │          │
+    │                 │                  │               │          │
+    │   [Si notes manquantes]            │               │          │
+    │◄──[Alerte : ECUE sans notes]       │               │          │
+    │                 │                  │               │          │
+    │   [Si toutes validées]             │               │          │
+    │                 │─[Calc. moyenne par ECUE]         │          │
+    │                 │─[Calc. moyenne UE par crédit]    │          │
+    │                 │─[Calc. moyenne semestrielle]     │          │
+    │                 │─[Calc. rang dans filière]        │          │
+    │                 │─[Déterminer mention/décision]    │          │
+    │                 │─[Générer PDF WeasyPrint]         │          │
+    │                 │─[Sauvegarder MinIO]              │          │
+    │◄──[Bulletin prêt, est_publie=FALSE] │              │          │
+    │                 │                  │               │          │
+    │──[Publier]──────►│                 │               │          │
+    │                 │─[est_publie=TRUE] │               │          │
+    │                 │─[Notifier]───────────────────────►│          │
+    │                 │─[Notifier]──────────────────────────────────►│
+    │                 │                  │               │          │
+    │                 │                  │  [Télécharger bulletin]   │
+    │                 │◄─────────────────────────────────│          │
+    │                 │─[Retourner PDF]────────────────►│            │
+```
+
+### 9.6 Diagramme d'État — Cycle de Vie d'une Note
+
+```
+        [Saisie]
+           │
+           ▼
+      ┌─────────┐
+      │Brouillon│ ←──────────────────────────┐
+      └─────────┘                            │
+           │ [Soumettre]                     │ [Rejeter + motif]
+           ▼                                 │
+      ┌─────────┐         ┌───────────┐      │
+      │ Soumise │────────►│ Contestée │──────┘
+      └─────────┘  [Err.] └───────────┘
+           │ [Directeur valide]
+           ▼
+      ┌─────────┐
+      │ Validée │ (état final - immuable sauf proc. exceptionnelle)
+      └─────────┘
+           │ [Visible étudiant]
+           │ [Visible parent]
+           │ [Incluse dans bulletin]
+```
+
+---
+
+## 10. RÈGLES MÉTIER (RM)
+
+| ID | Règle | Acteur Concerné | Impact |
+|---|---|---|---|
+| RM-01 | Un directeur est lié à un seul campus | Super Admin | Création compte |
+| RM-02 | 5 échecs de connexion → blocage 30min | Tous | Sécurité |
+| RM-03 | Backup quotidien automatique | Système | Intégrité données |
+| RM-04 | Dashboard DG rafraîchi toutes les 5min | Système | Performance |
+| RM-05 | DG peut annoter mais pas modifier | DG | Gouvernance |
+| RM-06 | Bulletin générable uniquement si toutes notes validées | Directeur | Qualité académique |
+| RM-07 | Changement directeur initié par DG, créé par SA | DG/SA | Sécurité |
+| RM-08 | Alertes DG : impayés>35%, absence ens.>20%, jury+30j | Système | Pilotage |
+| RM-09 | Notes >48h non validées → alerte rouge directeur | Système | Réactivité |
+| RM-10 | Directeur crée filières dans grades autorisés par campus | DG/Directeur | Périmètre |
+| RM-11 (RG01) | Créneau EDT bloqué si conflit ens./salle/filière | Système | Intégrité EDT |
+| RM-12 (RG02) | Alerte non-bloquante si créneau sur indisponibilité ens. | Système | Aide à la décision |
+| RM-13 | Étudiant voit uniquement notes validées | Système | Confidentialité |
+| RM-14 | Note validée immuable sauf proc. exceptionnelle directeur | Directeur | Intégrité académique |
+| RM-15 | Moyenne = Σ(note×crédit) / Σ(crédit), notes validées seules | Système | Calcul LMD |
+| RM-16 | PV généré après délibération jury, pas automatiquement | Directeur | Acte légal |
+| RM-17 | Mentions CAMES : ≥16 TB, ≥14 B, ≥12 AB, ≥10 P, <10 Ajourné | Système | Standard CAMES |
+| RM-18 | Étudiant <10 pendant 2S consécutifs → alerte "En difficulté" | Système | Suivi pédagogique |
+| RM-19 | Un étudiant = une seule inscription active par année | Scolarité | Unicité |
+| RM-20 | Redoublant garde notes ECUE ≥10 validées | Système | Règle LMD |
+| RM-21 | Scolarité modifie coordonnées, pas notes ni matricule | Système | Séparation responsabilités |
+| RM-22 | Scolarité soumet les notes, ne les valide pas | Scolarité | Hiérarchie |
+| RM-23 | Note entre 0.00 et 20.00 uniquement | Système | Validation |
+| RM-24 | Scolarité ne peut pas forcer un conflit EDT | Système | Réservé directeur |
+| RM-25 | Absence enseignant → notif auto étudiants filière | Système | Communication |
+| RM-26 | Parent ne voit que ses enfants liés par scolarité | Système | Confidentialité |
+| RM-27 | Scolarité : messages vers tous ou groupes filière | Scolarité | Communication |
+| RM-28 | Tout paiement génère un reçu numéroté immuable | Système | Comptabilité |
+| RM-29 | Paiement mobile money : référence transaction obligatoire | Comptabilité | Traçabilité |
+| RM-30 | Param. : étudiant avec impayé peut-il passer examen ? | Directeur | Politique institutionnelle |
+| RM-31 | Grille frais validée par directeur avant application | Directeur/Compta | Gouvernance financière |
+| RM-32 | Revenu bibliothèque = recette établissement | Système | Finance |
+| RM-33 | Rapports financiers lisibles par directeur et DG | Système | Transparence |
+| RM-34 | Données contractuelles enseignants = RH uniquement | Système | Confidentialité RH |
+| RM-35 | Vacataire : rémunération sur heures effectuées | RH | Paie |
+| RM-36 | Absence non justifiée ens. = heure déduite du compteur | Système | Calcul heures |
+| RM-37 | Déclaration disponibilité = aide à la décision, non bloquante | Enseignant | Souplesse |
+| RM-38 | Délai déclaration dispo : 72h avant début semaine | Système | Organisation |
+| RM-39 | Modification EDT enseignant → notification immédiate | Système | Communication |
+| RM-40 | Enseignant saisit notes de SES cours uniquement | Système | Périmètre strict |
+| RM-41 | Note soumise non modifiable par enseignant | Système | Intégrité |
+| RM-42 | Publication bibliothèque : approbation directeur obligatoire | Directeur | Qualité |
+| RM-43 | Prix documents validés par directeur | Directeur | Contrôle |
+| RM-44 | Étudiant voit uniquement ses données | Système | Isolation |
+| RM-45 | Contestation note : max 15 jours après validation | Système | Délai |
+| RM-46 | EDT filière affiché en temps réel avec notifications | Système | Temps réel |
+| RM-47 | Bulletin visible étudiant uniquement si est_publie=TRUE | Système | Contrôle diffusion |
+| RM-48 | Étudiant ne modifie pas matricule/nom/filière | Système | Intégrité |
+| RM-49 | Pas de paiement en ligne intégré en V1 | Système | Périmètre V1 |
+| RM-50 | Parent voit solde financier, étudiant non (configurable) | Système | Politique |
+| RM-51 | Assiduité <75% → notif parent auto ; <60% → alerte urgente | Système | Suivi |
+| RM-52 | Parent configure ses préférences de notification | Parent | UX |
+| RM-53 | Bibliothèque : étudiant voit sa filière par défaut | Système | Pertinence |
+| RM-54 | Accès document payant = paiement confirmé | Système | Contrôle accès |
+
+---
+
+## 11. SYSTÈME TEMPS RÉEL
+
+### 11.1 Architecture WebSocket
+
+```
+Client (Browser/PWA)
+        │
+        │ WebSocket (wss://)
+        ▼
+Django Channels (ASGI)
+        │
+        │ Channel Layer
+        ▼
+Redis (Pub/Sub)
+        │
+        ▼
+Groupes de Canaux :
+  ├── campus_{campus_id}          → Tous les acteurs du campus
+  ├── filiere_{filiere_id}        → Étudiants + enseignants d'une filière
+  ├── user_{user_id}              → Notifications personnelles
+  ├── directeur_{campus_id}       → Alertes directeur
+  └── dg_global                  → Alertes DG multi-campus
+```
+
+### 11.2 Événements Temps Réel
+
+| Événement | Canal | Déclencheur | Destinataires |
+|---|---|---|---|
+| `note_validee` | user_{etudiant_id} | Directeur valide une note | Étudiant + Parents liés |
+| `edt_modifie` | filiere_{filiere_id} | Modification créneau EDT | Tous étudiants filière + Enseignant concerné |
+| `absence_enseignant` | filiere_{filiere_id} | Scolarité marque absence | Tous étudiants filière |
+| `bulletin_publie` | user_{etudiant_id} | Directeur publie bulletin | Étudiant + Parents |
+| `paiement_confirme` | user_{etudiant_id} | Comptabilité valide paiement | Étudiant |
+| `nouvelle_alerte_dg` | dg_global | Seuil dépassé (impayé/absence) | DG |
+| `note_soumise` | directeur_{campus_id} | Enseignant soumet notes | Directeur |
+| `document_approuve` | filiere_{filiere_id} | Directeur approuve doc biblio | Tous étudiants filière |
+
+### 11.3 Rafraîchissement des Données
+
+| Données | Mode | Fréquence |
+|---|---|---|
+| Dashboard DG (KPI campus) | Polling | Toutes les 5 minutes |
+| Présences du jour | WebSocket | Temps réel |
+| Notes validées | WebSocket | Instantané |
+| EDT | WebSocket | Instantané à chaque modification |
+| Solde financier | WebSocket | À chaque paiement enregistré |
+| Compteurs dashboard directeur | WebSocket | À chaque événement |
+
+---
+
+## 12. UI/UX — SPÉCIFICATION INTERFACE
+
+### 12.1 Philosophie de Design
+
+**Inspiré de Sage ERP** : Interface professionnelle, dense en information utile, sans fioriture. Chaque pixel a un sens. Pas de features décoratives.
+
+**Revolution** : Interface Sage + expérience moderne. Données en temps réel, notifications push, mobile-first, micro-animations fluides.
+
+**Principe cardinal :** L'utilisateur doit trouver en moins de 3 clics n'importe quelle information dont il a besoin.
+
+### 12.2 Palette de Couleurs
+
+```css
+/* Couleurs Primaires UIST */
+--uist-navy:       #0F2340;  /* Navigation, headers */
+--uist-gold:       #C8A842;  /* Accents, CTA importants, logo */
+--uist-white:      #FFFFFF;  /* Fond principal */
+--uist-slate:      #F4F6F9;  /* Fond secondaire, sidebar */
+
+/* Couleurs Fonctionnelles */
+--uist-success:    #1A7A4A;  /* Note validée, admis, présent */
+--uist-warning:    #D4720A;  /* Alerte, en attente, retard */
+--uist-danger:     #C0392B;  /* Erreur, absent, ajourné, conflit */
+--uist-info:       #1A5FAB;  /* Information, note soumise */
+--uist-neutral:    #6B7280;  /* Texte secondaire, inactif */
+
+/* Statut Notes */
+--note-brouillon:  #9CA3AF;  /* Gris */
+--note-soumise:    #3B82F6;  /* Bleu */
+--note-validee:    #10B981;  /* Vert */
+--note-contestee:  #F59E0B;  /* Jaune */
+
+/* Filières — Couleurs distinctives */
+--fil-dawm:        #7C3AED;  /* Violet — Développement */
+--fil-si:          #0EA5E9;  /* Bleu ciel — Systèmes */
+--fil-rit:         #06B6D4;  /* Cyan — Réseaux */
+--fil-droit:       #DC2626;  /* Rouge — Droit */
+--fil-sea:         #D97706;  /* Ambre — Économie */
+--fil-seg:         #059669;  /* Émeraude — Gestion */
+--fil-gec:         #7C3AED;  /* Violet — BTS Compta */
+--fil-ida:         #2563EB;  /* Bleu — BTS Info */
+--fil-fcge:        #0891B2;  /* Cyan foncé — BTS Finance */
+```
+
+### 12.3 Typographie
+
+```css
+--font-display:    'DM Serif Display', serif;   /* Titres majeurs, logo */
+--font-heading:    'DM Sans', sans-serif;        /* Titres de section */
+--font-body:       'Inter', sans-serif;          /* Corps de texte, tableaux */
+--font-mono:       'JetBrains Mono', monospace; /* Matricules, codes */
+--font-size-xs:    0.75rem;  /* Labels, badges */
+--font-size-sm:    0.875rem; /* Texte secondaire */
+--font-size-base:  1rem;     /* Corps principal */
+--font-size-lg:    1.125rem; /* Sous-titres */
+--font-size-xl:    1.25rem;  /* Titres de section */
+--font-size-2xl:   1.5rem;   /* Titres page */
+--font-size-3xl:   2rem;     /* KPI chiffres */
+```
+
+### 12.4 Layout Global — Structure des Écrans
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│  TOPBAR (hauteur fixe 56px)                                    │
+│  [Logo UIST]  [Fil d'Ariane]        [🔔 3] [Photo] [Nom ▼]    │
+├──────────────┬─────────────────────────────────────────────────┤
+│              │                                                  │
+│  SIDEBAR     │  ZONE DE CONTENU PRINCIPAL                      │
+│  (224px)     │                                                  │
+│              │  ┌────────────────────────────────────────────┐ │
+│  [Avatar]    │  │ Titre Page          [Actions CTA]          │ │
+│  [Nom]       │  ├────────────────────────────────────────────┤ │
+│  [Rôle]      │  │                                            │ │
+│  [Campus]    │  │  CONTENU (tableaux, formulaires,          │ │
+│              │  │  calendriers, graphiques...)               │ │
+│  ──────────  │  │                                            │ │
+│  Menu items  │  │                                            │ │
+│  avec icônes │  │                                            │ │
+│  et badges   │  │                                            │ │
+│  numériques  │  └────────────────────────────────────────────┘ │
+│              │                                                  │
+│  ──────────  │                                                  │
+│  [Déconn.]   │                                                  │
+└──────────────┴─────────────────────────────────────────────────┘
+```
+
+### 12.5 Composants UI Standardisés
+
+#### Tableaux de Données
+- Header : fond --uist-navy, texte blanc
+- Lignes alternées : blanc / --uist-slate
+- Surbrillance au hover : bordure gauche 3px --uist-gold
+- Colonne sélectionnée : fond léger --uist-gold/10
+- Pagination : "Afficher X lignes" + pages numérotées
+- Recherche inline au-dessus du tableau
+- Export (PDF/Excel) : bouton icône en haut à droite
+
+#### Badges de Statut
+```
+[● Validée]     fond: #D1FAE5  texte: #065F46  (vert pâle)
+[● Soumise]     fond: #DBEAFE  texte: #1E3A8A  (bleu pâle)
+[● En attente]  fond: #FEF3C7  texte: #92400E  (jaune pâle)
+[● Contestée]   fond: #FEE2E2  texte: #991B1B  (rouge pâle)
+[● Brouillon]   fond: #F3F4F6  texte: #374151  (gris pâle)
+```
+
+#### Cards KPI (Dashboard)
+```
+┌────────────────────────┐
+│  [Icône]               │
+│                        │
+│  23                    │  ← Chiffre clé (font-size-3xl, gras)
+│  Notes en attente      │  ← Label (font-size-sm, --uist-neutral)
+│  ────────────          │
+│  ↑ 5 depuis hier       │  ← Tendance (vert si bon, rouge si mauvais)
+└────────────────────────┘
+```
+
+#### Formulaires
+- Labels au-dessus des champs (jamais en placeholder seul)
+- Champs avec bordure 1px #E5E7EB, focus: bordure 2px --uist-navy
+- Erreurs affichées en rouge sous le champ immédiatement (validation front-end temps réel)
+- Bouton primaire : fond --uist-navy, texte blanc, hover: fond légèrement plus clair
+- Bouton secondaire : fond transparent, bordure --uist-navy, texte --uist-navy
+- Bouton danger : fond --uist-danger, texte blanc
+
+#### Navigation Sidebar par Rôle
+
+**Directeur :**
+```
+📊 Dashboard          [●] (alertes)
+👥 Utilisateurs
+🏫 Filières & Cours
+📅 Emploi du Temps    [2] (conflits)
+📝 Notes              [23] (à valider)
+📄 Bulletins & PV
+💰 Finances (lecture)
+📚 Bibliothèque
+✉️ Messages           [5] (non lus)
+📈 Rapports
+```
+
+**Étudiant :**
+```
+🏠 Accueil
+📝 Mes Notes
+📅 Mon Emploi du Temps
+📄 Mes Bulletins
+💰 Mes Paiements
+📚 Bibliothèque
+✉️ Messages
+👤 Mon Profil
+```
+
+### 12.6 Responsive et Mobile
+
+- **Breakpoints :**
+  - Mobile : < 768px (sidebar devient bottom navigation ou hamburger)
+  - Tablette : 768px - 1024px (sidebar condensée en icônes seules)
+  - Desktop : > 1024px (sidebar complète avec labels)
+
+- **Mobile First pour :** Étudiant, Parent (accès majoritairement smartphone)
+- **Desktop First pour :** Directeur, DG, Comptabilité, Scolarité (travail de bureau)
+
+- **PWA :** Installation sur écran d'accueil, fonctionnement hors-ligne partiel (consultation des données en cache), notifications push native.
+
+### 12.7 Page de Connexion
+
+```
+┌──────────────────────────────────────────┐
+│                                          │
+│         [Logo UIST]                      │
+│    UNIVERSITÉ INTERNATIONALE             │
+│    DES SCIENCES ET TECHNOLOGIES          │
+│                                          │
+│  ┌────────────────────────────────────┐  │
+│  │  Matricule                         │  │
+│  │  [ KA-2024-DAWM-0023              ]│  │
+│  └────────────────────────────────────┘  │
+│                                          │
+│  ┌────────────────────────────────────┐  │
+│  │  Mot de passe                      │  │
+│  │  [ ••••••••••                    👁]│  │
+│  └────────────────────────────────────┘  │
+│                                          │
+│  [        Se connecter         ]         │
+│                                          │
+│  Mot de passe oublié ?                  │
+│                                          │
+│  ─────────────────────────────────────  │
+│  Sélectionner votre campus :            │
+│  [ UIST Abidjan Riviera            ▼ ] │
+│                                          │
+└──────────────────────────────────────────┘
+```
+
+**Logique connexion :**
+1. Saisie matricule + mot de passe + campus
+2. Vérification : utilisateur actif, campus correct, mot de passe Argon2id
+3. Si 1ère connexion ou mot de passe temporaire : redirection forcée vers changement de mot de passe
+4. Génération JWT (Access 15min + Refresh 7j)
+5. Redirection vers dashboard selon le rôle
+
+---
+
+## 13. MICRO-ANIMATIONS
+
+### 13.1 Animations d'Interface
+
+| Composant | Animation | Durée | Déclencheur | Librairie |
+|---|---|---|---|---|
+| Sidebar menu item | Slide gauche + fade in | 200ms | Changement de page | CSS |
+| Card KPI | Counter animé (0 → valeur) | 800ms | Chargement dashboard | Framer Motion |
+| Badge notification | Pulse rouge si nouvelle notif | Continu | Nouvelle notification | CSS keyframes |
+| Tableau rows | Staggered fade in (50ms entre chaque) | 300ms total | Chargement liste | Framer Motion |
+| Note soumise | Tick vert animé | 400ms | Soumission réussie | Lottie |
+| Alerte conflit EDT | Shake horizontal | 300ms | Conflit détecté | CSS |
+| Loading état | Skeleton screens (pas spinner) | — | Chargement données | CSS |
+| Toast notification | Slide depuis haut droite + auto-dismiss 4s | 300ms entrée | Événement système | Framer Motion |
+| Modal | Scale 0.95→1 + fade | 200ms | Ouverture modal | Framer Motion |
+| Bouton submit | Spinner inline + texte "Traitement..." | Pendant req. | Clic bouton | CSS |
+| Note validée badge | Flip de "Soumise" → "Validée" | 400ms | WebSocket event | Framer Motion |
+| Dashboard KPI update | Flash doré (--uist-gold) puis normal | 600ms | Donnée mise à jour | CSS |
+| Drag & drop EDT | Ghost card translucide | Drag | Création créneau | DnD Kit |
+| Page transition | Fade 150ms | Chaque navigation | Router change | Framer Motion |
+
+### 13.2 États de Chargement
+
+- **Skeleton screens :** Pour tous les tableaux et listes. Jamais de spinner page complète.
+- **Chargement inline :** Pour les actions (soumission, validation). Le bouton se désactive et affiche un indicateur.
+- **Optimistic UI :** Pour les actions rapides (marquer lu, cocher présence). L'UI se met à jour immédiatement, rollback si erreur serveur.
+
+### 13.3 Feedback Utilisateur
+
+| Action | Feedback Visuel | Feedback Sonore |
+|---|---|---|
+| Note validée (directeur) | Toast vert "Note validée avec succès" | Optionnel (configurable) |
+| Paiement enregistré | Toast vert + animation reçu imprimé | Non |
+| Conflit EDT détecté | Modal rouge avec détails conflit | Non |
+| Import Excel terminé | Modal récap : X importées, Y rejetées | Non |
+| Connexion réussie | Animation bienvenue (0.5s) | Non |
+| Erreur serveur | Toast rouge + bouton "Réessayer" | Non |
+| Document bibliothèque débloqué | Animation unlock | Non |
+
+---
+
+## 14. SÉCURITÉ & AUTHENTIFICATION
+
+### 14.1 Politique de Mots de Passe
+
+- Longueur minimum : 8 caractères
+- Requiert : majuscule + minuscule + chiffre
+- Hashage : Argon2id (mémoire=64MB, itérations=3, parallélisme=4)
+- Premier mot de passe : temporaire, changement forcé à la 1ère connexion
+- Expiration : tous les 90 jours (configurable par Super Admin)
+- Historique : les 5 derniers mots de passe ne peuvent pas être réutilisés
+
+### 14.2 Gestion des Sessions
+
+- **Access Token JWT :** 15 minutes, signé HS256, payload : {user_id, role, campus_id, exp}
+- **Refresh Token :** 7 jours, stocké httpOnly cookie, rotation à chaque usage
+- **Déconnexion :** Blacklist du refresh token dans Redis
+- **Multi-device :** Limité à 3 sessions actives simultanées par utilisateur
+- **Timeout d'inactivité :** 2 heures (configurable)
+
+### 14.3 Contrôle d'Accès
+
+- **Backend :** Middleware de vérification du rôle sur chaque endpoint API
+- **Frontend :** Routes protégées avec vérification du rôle en local (double vérification)
+- **Isolation campus :** Chaque requête vérifie campus_id de l'utilisateur vs campus_id de la ressource demandée
+- **Isolation étudiant/parent :** Requêtes filtrées par ID utilisateur au niveau ORM (jamais de "SELECT *")
+
+### 14.4 Audit & Traçabilité
+
+Chaque action critique est enregistrée dans `audit_log` :
+- Connexion/Déconnexion
+- Création/Modification/Suppression de tout compte
+- Validation de notes
+- Modification d'une note validée
+- Forçage d'un conflit EDT
+- Génération de PV
+- Modification de frais de scolarité
+- Accès à un rapport financier
+- Toute action d'un Super Admin
+
+### 14.5 Protection des Données Personnelles
+
+- Données étudiants : accessibles uniquement aux rôles autorisés de leur campus
+- Numéros de téléphone parents : masqués partiellement dans les listes (***.***.**XX)
+- Mot de passe : jamais stocké en clair, jamais loggé
+- Fichiers PDF bulletins : URL signées avec expiration 1h (MinIO presigned URLs)
+- RGPD / Loi ivoirienne : conformité avec la loi n°2013-450 sur la protection des données personnelles en Côte d'Ivoire
+
+---
+
+## 15. GLOSSAIRE
+
+| Terme | Définition dans le contexte UIST-2ITS |
+|---|---|
+| **CAMES** | Conseil Africain et Malgache pour l'Enseignement Supérieur — organisme de référence pour les diplômes en Afrique francophone |
+| **Campus** | Site physique d'un établissement UIST (ex: UIST Abidjan Riviera) |
+| **ECUE** | Élément Constitutif d'Unité d'Enseignement — subdivision d'une UE (ex: MAT1211) |
+| **EDT** | Emploi du Temps — planning des créneaux de cours |
+| **Filière** | Programme d'enseignement (ex: DAWM, SEA, BTS-GEC) |
+| **LMD** | Licence-Master-Doctorat — système d'enseignement supérieur en vigueur |
+| **Mention** | Qualification académique : Très Bien, Bien, Assez Bien, Passable |
+| **Matricule** | Identifiant unique d'un utilisateur — format défini en §4 |
+| **PV** | Procès-Verbal de délibération du jury — document légal des résultats |
+| **RG01** | Règle de Gestion anti-conflit EDT — vérification enseignant/salle/filière |
+| **RG02** | Règle de Gestion disponibilités — alerte sur indisponibilité déclarée |
+| **RM** | Règle Métier — contrainte fonctionnelle de l'application |
+| **Scolarité** | Pôle administratif gérant les inscriptions, notes, assiduité |
+| **SYSCOHADA** | Système Comptable OHADA — référentiel comptable Afrique Ouest francophone |
+| **UE** | Unité d'Enseignement — bloc pédagogique regroupant des ECUE |
+| **UIST** | Université Internationale des Sciences et Technologies |
+| **Vacataire** | Enseignant payé à l'heure (non permanent) |
+| **2ITS** | Identifiant système de la plateforme de gestion UIST |
+
+---
+
+## ANNEXE A — Points d'API Principaux (Référence Backend)
+
+| Méthode | Route | Rôle requis | Description |
+|---|---|---|---|
+| POST | /api/auth/login | Public | Connexion utilisateur |
+| POST | /api/auth/refresh | Auth | Renouveler access token |
+| GET | /api/campus | DG/SA | Liste tous les campus |
+| POST | /api/campus | SA | Créer un campus |
+| GET | /api/campus/{id}/dashboard | DG/Directeur | KPI campus |
+| GET | /api/filieres | Directeur+ | Liste filières campus |
+| POST | /api/filieres | DG/Directeur | Créer filière |
+| PUT | /api/filieres/{id} | DG/Directeur | Modifier filière |
+| GET | /api/edt/{filiere_id} | Tous | EDT d'une filière |
+| POST | /api/edt | Directeur/Scolarité | Créer créneau |
+| DELETE | /api/edt/{id} | Directeur | Supprimer créneau |
+| GET | /api/notes?ecue={id} | Directeur/Scolarité/Enseignant | Notes d'une ECUE |
+| POST | /api/notes | Enseignant/Scolarité | Saisir note |
+| PATCH | /api/notes/{id}/valider | Directeur | Valider une note |
+| GET | /api/bulletins/{etudiant_id} | Directeur/Scolarité/Étudiant/Parent | Bulletins étudiant |
+| POST | /api/bulletins/generer | Directeur/Scolarité | Générer bulletins |
+| POST | /api/bulletins/{id}/publier | Directeur | Publier bulletin |
+| GET | /api/etudiants/{id} | Directeur/Scolarité | Dossier étudiant |
+| POST | /api/paiements | Comptabilité | Enregistrer paiement |
+| GET | /api/bibliotheque?filiere={id} | Étudiant/Enseignant | Documents filière |
+| POST | /api/bibliotheque | Enseignant/Scolarité | Proposer document |
+| PATCH | /api/bibliotheque/{id}/approuver | Directeur | Approuver document |
+| POST | /api/bibliotheque/{id}/acheter | Étudiant | Acheter document |
+| ws:// | /ws/notifications/{user_id} | Auth | Canal WebSocket perso |
+| ws:// | /ws/filiere/{filiere_id} | Auth | Canal WebSocket filière |
+
+---
+
+## ANNEXE B — Règles de Calcul des Moyennes (Détail)
+
+```
+NIVEAU ECUE :
+  Si plusieurs évaluations pour un ECUE :
+  Moy_ECUE = Σ(valeur_note_i × coeff_eval_i) / Σ(coeff_eval_i)
+
+NIVEAU UE :
+  Moy_UE = Σ(Moy_ECUE_j × credits_ECUE_j) / Σ(credits_ECUE_j)
+  Validation UE : Moy_UE ≥ 10/20
+
+NIVEAU SEMESTRE :
+  Moy_Semestre = Σ(Moy_UE_k × credits_UE_k) / Σ(credits_UE_k)
+  (uniquement notes avec statut_validation = 'Validée')
+
+NIVEAU ANNUEL :
+  Moy_Annuelle = (Moy_S1 × crédits_S1 + Moy_S2 × crédits_S2)
+                 / (crédits_S1 + crédits_S2)
+
+RANG :
+  Rang_Etudiant = 1 + COUNT(étudiants de même filière/niveau/semestre
+                             ayant une Moy_Semestre > Moy_Semestre_Etudiant)
+
+MENTIONS (Standard CAMES) :
+  ≥ 16.00  → Très Bien
+  ≥ 14.00  → Bien
+  ≥ 12.00  → Assez Bien
+  ≥ 10.00  → Passable
+  < 10.00  → Ajourné
+
+DÉCISION JURY :
+  Admis(e)               : Moy_Annuelle ≥ 10 ET tous crédits validés
+  Admis(e) avec dettes   : Moy_Annuelle ≥ 10 MAIS UE(s) < 10 non compensées
+  Ajourné(e)             : Moy_Annuelle < 10
+  Exclu(e)               : Ajourné 2 fois consécutives (redoublement unique)
+```
+
+---
+
+## ANNEXE C — Checklist d'Implémentation
+
+### Phase 1 — Infrastructure (Semaines 1-2)
+- [ ] Setup PostgreSQL + Redis + MinIO
+- [ ] Configuration Django + DRF + Channels
+- [ ] Modèles de données (migrations)
+- [ ] Système d'authentification JWT
+- [ ] Audit log middleware
+- [ ] Génération des matricules
+
+### Phase 2 — Administration (Semaines 3-5)
+- [ ] CRUD Campus, Filières, UE, ECUE
+- [ ] Gestion utilisateurs (tous rôles)
+- [ ] Emploi du temps (CRUD + vérification RG01/RG02)
+- [ ] Système de présences
+- [ ] WebSocket notifications base
+
+### Phase 3 — Pédagogique (Semaines 6-8)
+- [ ] Saisie et validation de notes
+- [ ] Calcul des moyennes (toutes formules)
+- [ ] Génération bulletins PDF (WeasyPrint)
+- [ ] Génération PV jury PDF
+- [ ] Espace enseignant complet
+
+### Phase 4 — Finance (Semaines 9-10)
+- [ ] Frais de scolarité CRUD
+- [ ] Enregistrement paiements
+- [ ] Génération reçus PDF
+- [ ] Rapports financiers
+
+### Phase 5 — Bibliothèque & Portails (Semaines 11-12)
+- [ ] Mini-bibliothèque (upload, approbation, accès)
+- [ ] Portail étudiant complet
+- [ ] Portail parent complet
+- [ ] PWA et mobile
+
+### Phase 6 — DG & Reporting (Semaines 13-14)
+- [ ] Dashboard DG multi-campus
+- [ ] Tous les rapports consolidés
+- [ ] WebSocket complet (tous événements)
+- [ ] Alertes automatiques
+
+### Phase 7 — Tests & Déploiement (Semaines 15-16)
+- [ ] Tests unitaires (coverage > 80%)
+- [ ] Tests d'intégration API
+- [ ] Tests de charge (1000 utilisateurs simultanés)
+- [ ] Documentation API (Swagger)
+- [ ] Déploiement production
+- [ ] Formation administrateurs
+
+---
+
+*Document rédigé pour le projet UIST-2ITS · Version 2.0 · Avril 2026*
+*Ce document est la source de vérité unique pour l'implémentation de la plateforme.*
+*Toute ambiguïté doit être résolue par référence aux règles métier (RM) définies en §10.*
